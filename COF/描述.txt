@@ -1,0 +1,22 @@
+8MB 片外Flash 256KB每单元32格单元 存下载文件
+1MB片内 Nor Flash ROM
+
+
+GUI CPU	
+	256KWords  ROM NOR FLASH 0x000000-0x03fffe
+	128KB 数据变量空间 0x0000-0xffff 一个变量地址对应2字节，一个字=2字节
+ 	0x0000-0x0fff系统变量接口地址
+	0x1000-0xffff变量存储空间 用户
+	8通道曲线同时使用则占用0x1000-0x4fff作为曲线缓冲区地址，用户地址应为0x5000-0xffff	通道0 1000-17ff	通达1 1800-1fff	通道2 2000-27ff 通道3 2800-2fff 
+通道4 3000-37ff
+通道5 3800 3fff
+通道6 4000 47ff
+通道7 4800 4fff
+
+
+OS CPU
+	64KB ROM代码空间
+	32KB片内RAM 数据存储器
+
+
+

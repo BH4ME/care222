@@ -1,0 +1,1003 @@
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE START_WIN
+OBJECT MODULE PLACED IN .\Objects\start_win.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\start_win.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRIN
+                    -T(.\Listings\start_win.lst) TABS(2) OBJECT(.\Objects\start_win.obj)
+
+line level    source
+
+   1          #include "start_win.h"
+   2          #include "column_chart.h"
+   3          #include <stdio.h>
+   4          #include "uart4.h"
+   5          #include <math.h>
+   6          #include "handle.h"
+   7          //#define START_WIN_CHART_VP    0x4000    //基本图形控件的VP地址
+   8          //#define COLUMN_CHART_HEIGHT   295       //柱状图的高度
+   9          
+  10          
+  11          //bit is_anim = 1;
+  12          //bit style = 0;
+  13          //u16 color = 0xf800;
+  14          //uint16_t init_val[3];
+  15          //  uint16_t MAX;
+  16          //COLUMN_CHART chart;
+  17          //u16 start_win_get_val(s16 index);
+  18          
+  19          //u16 x1_0=0x85;
+  20          //u16 y1_0=0x364;
+  21          
+  22          uint Draw_W_Flag=0;   //0不启动画线，1启动画线
+  23          uint First_Draw_Flag=0;   //只加载一次
+  24          
+  25          
+  26            u16 Y_zuobiao;
+  27            u16 X_zuobiao;
+  28            
+  29            float S_Write;    
+  30          
+  31          
+  32          u16 Adress_Now;
+  33          
+  34          double P_mW_First=0.0;
+  35          double W_mJ_zong=0.0;
+  36          float W_mJ_doing=0.0;
+  37          double T_First=0.0; //初始时间不变的
+  38          uint T_doing=0.0; //已进行的时间
+  39          uint T_All=0;
+  40          u8 Page_Lasttime=0;
+  41          u8 Page_s[2]={0};
+  42          void X_Y_Calculate();
+  43          void Draw_juxing();
+  44          void Draw_juxing_zuobiao();
+  45          void S_D_Surfaces_All();
+  46          void Unlock_current_page_zengliang(u8 id_1,u8 daima_1,u8 id_2,u8 daima_2);
+  47          void Lock_current_page_zengliang(u8 id_1,u8 daima_1,u8 id_2,u8 daima_2);
+  48          u8 second_firstdraw_flag=0; //第二次画图的flag
+  49          uint Y_zuobiao_static=0;
+  50          u16 chart_num =0;
+  51          void sys_write_chart_zhexian_Two(u16 x1,u16 y1,u16 x2,u16 y2)   //输入2个点
+  52          {
+  53   1        #define CHART_ADDR    0xb000  //动态曲线功能所对应的系统变量接口地址
+  54   1        //#define CHART_NUM     0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 2   
+
+  55   1        //#define POINT_NUM     1       //一次性写入多少个数据点
+  56   1        #define colour 0Xffff
+  57   1        u8 chart_cmd[16] = {0x00,0x02};
+  58   1        chart_cmd[2]=(u8)(chart_num>>8);
+  59   1        chart_cmd[3]=(u8)(chart_num&0xff);
+  60   1        chart_cmd[4] = (u8)(colour>>8);//曲线通道id
+  61   1        chart_cmd[5] = (u8)(colour&0xff);//一次性写入多少个数据点
+  62   1        chart_cmd[6] = (u8)(x1>>8);//x1
+  63   1        chart_cmd[7] = (u8)(x1&0xff);
+  64   1        chart_cmd[8] = (u8)(y1>>8);//y1
+  65   1        chart_cmd[9] = (u8)(y1&0xff);
+  66   1        chart_cmd[10] = (u8)(x2>>8);//x2
+  67   1        chart_cmd[11] = (u8)(x2&0xff);
+  68   1        chart_cmd[12] = (u8)(y2>>8);//y2
+  69   1        chart_cmd[13] = (u8)(y2&0xff);
+  70   1          chart_cmd[14] = (u8)0xff;//y2
+  71   1        chart_cmd[15] = (u8)0x00;     //0xa007 
+  72   1      //  y1=y2;
+  73   1      //  x1=x2;
+  74   1        Adress_Now=CHART_ADDR+0x7;chart_num++;
+  75   1        //发送命令
+  76   1        WriteDGUS(CHART_ADDR,chart_cmd,sizeof(chart_cmd));
+  77   1      }
+  78          void sys_write_chart_zhexian_Two_Cankao(u16 x1,u16 y1,u16 x2,u16 y2)    //输入2个点
+  79          {
+  80   1        #define CHART_ADDR_cankao   0x5500  //动态曲线功能所对应的系统变量接口地址
+  81   1        #define CHART_NUM_cankao      0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
+  82   1        //#define POINT_NUM     1       //一次性写入多少个数据点
+  83   1        #define colour_cankao 0X8410
+  84   1        u8 chart_cmd[16] = {0x00,0x02,0x0f,CHART_NUM_cankao};
+  85   1        chart_cmd[4] = (u8)(colour_cankao>>8);//曲线通道id
+  86   1        chart_cmd[5] = (u8)(colour_cankao&0xff);//一次性写入多少个数据点
+  87   1        chart_cmd[6] = (u8)(x1>>8);//x1
+  88   1        chart_cmd[7] = (u8)(x1&0xff);
+  89   1        chart_cmd[8] = (u8)(y1>>8);//y1
+  90   1        chart_cmd[9] = (u8)(y1&0xff);
+  91   1        chart_cmd[10] = (u8)(x2>>8);//x2
+  92   1        chart_cmd[11] = (u8)(x2&0xff);
+  93   1        chart_cmd[12] = (u8)(y2>>8);//y2
+  94   1        chart_cmd[13] = (u8)(y2&0xff);
+  95   1        chart_cmd[14] = (u8)0xff;//y2
+  96   1        chart_cmd[15] = (u8)0x00;     //0xa007 
+  97   1      //  y1=y2;
+  98   1      //  x1=x2;
+  99   1        //Adress_Now=0xa007;
+ 100   1        //发送命令
+ 101   1        WriteDGUS(CHART_ADDR_cankao,chart_cmd,sizeof(chart_cmd));
+ 102   1      }
+ 103          #define tubiao_chang 580  //图表的长度
+ 104          #define tubiao_kuan 120 //图表的宽度
+ 105          #define tubiao_zuoshang_x 10  //图表的左上x坐标
+ 106          #define tubiao_zuoshang_y 346 //图表的左上y坐标
+ 107          #define tubiao_0zuobiao_x 10 //0点坐标x
+ 108          #define tubiao_0zuobiao_y 426 //0点坐标y
+ 109          //高度6段 2.5 -1
+ 110          //#define tubiao_chang 570  //图表的长度
+ 111          //#define tubiao_kuan 112 //图表的宽度
+ 112          //#define tubiao_zuoshang_x 17  //图表的左上x坐标
+ 113          //#define tubiao_zuoshang_y 350 //图表的左上y坐标
+ 114          //#define tubiao_0zuobiao_x 17 //0点坐标x
+ 115          //#define tubiao_0zuobiao_y 430 //0点坐标y
+ 116          void Write_New(u16 x1,u16 y1)//每次写3字
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 3   
+
+ 117          {
+ 118   1      
+ 119   1          u8 chart_cmd[6] = {0};
+ 120   1          u8 chart[2]={0};
+ 121   1          EA=0; 
+ 122   1        chart_cmd[0] = (u8)(x1>>8);//x1
+ 123   1        chart_cmd[1] = (u8)(x1&0xff);
+ 124   1        chart_cmd[2] = (u8)(y1>>8);//y1
+ 125   1        chart_cmd[3] = (u8)(y1&0xff);   //0xa007 
+ 126   1        chart_cmd[4] = (u8)0xff;
+ 127   1        chart_cmd[5] = (u8)0x00;      //0xa007 
+ 128   1          
+ 129   1        chart[0]=(u8)(chart_num>>8);
+ 130   1        chart[1]=(u8)(chart_num&0xff);
+ 131   1      //    if(Adress_Now>=0xb000)
+ 132   1      //    {
+ 133   1      //      Adress_Now=0x0a007;
+ 134   1      //    }
+ 135   1          /******************判断xy的坐标是否超出表格值**********************************/
+ 136   1          if(x1>=(tubiao_chang+tubiao_zuoshang_x))  //超出右侧长度值
+ 137   1          {
+ 138   2            x1=tubiao_chang+tubiao_zuoshang_x;
+ 139   2          }
+ 140   1          else if(x1<tubiao_zuoshang_x){x1=tubiao_zuoshang_x;}
+ 141   1          
+ 142   1          if(y1>=(tubiao_zuoshang_y+tubiao_kuan))
+ 143   1          {
+ 144   2            y1=tubiao_zuoshang_y+tubiao_kuan-2;
+ 145   2          }
+ 146   1          else if(y1<tubiao_zuoshang_y){y1=tubiao_zuoshang_y+2;}
+ 147   1          
+ 148   1          /******************************************************************************/
+ 149   1          WriteDGUS(CHART_ADDR+0x1,chart,sizeof(chart));  //画多少条线
+ 150   1          WriteDGUS(Adress_Now,chart_cmd,sizeof(chart_cmd));
+ 151   1              
+ 152   1          Adress_Now=Adress_Now+0x2;chart_num++;
+ 153   1          EA=1;
+ 154   1      }
+ 155          
+ 156            u16 X_zuobiao_second;
+ 157          //u8 second_flag=0;   //没用的到第二条曲线的时候为0 用到第二条曲线的时候为1
+ 158          /*******************************写入第二条曲线 当时间变长的时候**************************/
+ 159          u16 chart_num_2 =0;
+ 160          u16 Adress_Now_2;
+ 161          void sys_write_chart_zhexian_Two_2(u16 x1,u16 y1,u16 x2,u16 y2)   //输入2个点
+ 162          {
+ 163   1        #define CHART_ADDR_2    0x8000  //动态曲线功能所对应的系统变量接口地址
+ 164   1        //#define CHART_NUM     0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
+ 165   1        //#define POINT_NUM     1       //一次性写入多少个数据点
+ 166   1        #define colour_2 0Xffe0
+ 167   1        
+ 168   1        u8 chart_cmd[16] = {0x00,0x02};
+ 169   1        EA=0;
+ 170   1        chart_num_2=1;
+ 171   1        chart_cmd[2]=(u8)(chart_num_2>>8);
+ 172   1        chart_cmd[3]=(u8)(chart_num_2&0xff);
+ 173   1        chart_cmd[4] = (u8)(colour_2>>8);//曲线通道id
+ 174   1        chart_cmd[5] = (u8)(colour_2&0xff);//一次性写入多少个数据点
+ 175   1        chart_cmd[6] = (u8)(x1>>8);//x1
+ 176   1        chart_cmd[7] = (u8)(x1&0xff);
+ 177   1        chart_cmd[8] = (u8)(y1>>8);//y1
+ 178   1        chart_cmd[9] = (u8)(y1&0xff);
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 4   
+
+ 179   1        chart_cmd[10] = (u8)(x2>>8);//x2
+ 180   1        chart_cmd[11] = (u8)(x2&0xff);
+ 181   1        chart_cmd[12] = (u8)(y2>>8);//y2
+ 182   1        chart_cmd[13] = (u8)(y2&0xff);
+ 183   1          chart_cmd[14] = (u8)0xff;//y2
+ 184   1        chart_cmd[15] = (u8)0x00;     //0xa007 
+ 185   1      //  y1=y2;
+ 186   1      //  x1=x2;
+ 187   1        X_zuobiao_second=tubiao_zuoshang_x+0x2;
+ 188   1        Adress_Now_2=CHART_ADDR_2+0x7;chart_num_2++;
+ 189   1        //发送命令
+ 190   1        WriteDGUS(CHART_ADDR_2,chart_cmd,sizeof(chart_cmd));
+ 191   1        EA=1;
+ 192   1      }
+ 193          void Write_New_2(u16 x1,u16 y1)//每次写3字
+ 194          {
+ 195   1      
+ 196   1          u8 chart_cmd[6] = {0};
+ 197   1          u8 chart[2]={0};
+ 198   1          EA=0; 
+ 199   1        chart_cmd[0] = (u8)(x1>>8);//x1
+ 200   1        chart_cmd[1] = (u8)(x1&0xff);
+ 201   1        chart_cmd[2] = (u8)(y1>>8);//y1
+ 202   1        chart_cmd[3] = (u8)(y1&0xff);   //0xa007 
+ 203   1        chart_cmd[4] = (u8)0xff;
+ 204   1        chart_cmd[5] = (u8)0x00;      //0xa007 
+ 205   1          
+ 206   1        chart[0]=(u8)(chart_num_2>>8);
+ 207   1        chart[1]=(u8)(chart_num_2&0xff);
+ 208   1      //    if(Adress_Now>=0xb000)
+ 209   1      //    {
+ 210   1      //      Adress_Now=0x0a007;
+ 211   1      //    }
+ 212   1          /******************判断xy的坐标是否超出表格值**********************************/
+ 213   1          if(x1>=(tubiao_chang+tubiao_zuoshang_x))  //超出右侧长度值
+ 214   1          {
+ 215   2            x1=tubiao_chang+tubiao_zuoshang_x;
+ 216   2          }
+ 217   1          else if(x1<tubiao_zuoshang_x){x1=tubiao_zuoshang_x;}
+ 218   1          
+ 219   1          if(y1>=(tubiao_zuoshang_y+tubiao_kuan))
+ 220   1          {
+ 221   2            y1=tubiao_zuoshang_y+tubiao_kuan-2;
+ 222   2          }
+ 223   1          else if(y1<tubiao_zuoshang_y){y1=tubiao_zuoshang_y+2;}
+ 224   1          
+ 225   1          /******************************************************************************/
+ 226   1          WriteDGUS(CHART_ADDR_2+0x1,chart,sizeof(chart));  //画多少条线
+ 227   1          WriteDGUS(Adress_Now_2,chart_cmd,sizeof(chart_cmd));
+ 228   1              
+ 229   1          Adress_Now_2=Adress_Now_2+0x2;chart_num_2++;
+ 230   1          EA=1;
+ 231   1      }
+ 232          
+ 233          /**********************************************************************************************/
+ 234          void X_Y_huoqu()
+ 235          {
+ 236   1        EA=0;
+ 237   1        /*******************************计算Y坐标结果值为像素**********************************/
+ 238   1              if(change_P_mW>=0)
+ 239   1            {
+ 240   2              Y_zuobiao = tubiao_0zuobiao_y-(change_P_mW/2.5*(tubiao_0zuobiao_y-tubiao_zuoshang_y));
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 5   
+
+ 241   2            }
+ 242   1            else 
+ 243   1              {
+ 244   2      
+ 245   2                Y_zuobiao = (tubiao_0zuobiao_y)+(fabs(change_P_mW)/1*(tubiao_zuoshang_y+tubiao_kuan-tubiao_0zuobiao_y
+             -));  
+ 246   2                if(change_P_mW==-1)
+ 247   2                {Y_zuobiao=Y_zuobiao-2;}
+ 248   2              }
+ 249   1              
+ 250   1            if(Y_zuobiao==Y_zuobiao_static)Y_zuobiao=Y_zuobiao+1;
+ 251   1        /****************************************计算X坐标结果值为像素*************************************/      
+ 252   1      
+ 253   1                if(Draw_1ms>=S_Write)
+ 254   1                { 
+ 255   2                  
+ 256   2                  Draw_1ms=0;
+ 257   2                  
+ 258   2                  if(X_zuobiao<=tubiao_zuoshang_x+tubiao_chang-0x2) //图像 1
+ 259   2                  {
+ 260   3                    X_zuobiao=2+X_zuobiao;          
+ 261   3                    Write_New(X_zuobiao,Y_zuobiao);
+ 262   3                  }
+ 263   2                  else  if(dynamic_static_flag  &&  T_All!=T_dynamic) //图像  2
+ 264   2                  {
+ 265   3                    //second_firstdraw_flag=1;
+ 266   3                    if(second_firstdraw_flag==0)
+ 267   3                    {
+ 268   4                      
+ 269   4                      sys_write_chart_zhexian_Two_2(tubiao_0zuobiao_x,tubiao_0zuobiao_y,tubiao_0zuobiao_x,tubiao_0zuobia
+             -o_y);
+ 270   4                      second_firstdraw_flag=1;
+ 271   4                    }
+ 272   3                    X_zuobiao_second=X_zuobiao_second+2;
+ 273   3                    Write_New_2(X_zuobiao_second,Y_zuobiao);
+ 274   3                    
+ 275   3                    
+ 276   3                  }
+ 277   2                  
+ 278   2                  
+ 279   2                }
+ 280   1      EA=1;
+ 281   1      
+ 282   1      }
+ 283          
+ 284          
+ 285          /***************治疗模式下时间处于动态**最后汇总曲线****************/
+ 286          u16 Adress_Now_dynamic;
+ 287          
+ 288          u16 dynamic_X_zuobiao;
+ 289          u16 dynamic_Y_zuobiao;
+ 290          void dynamic_draw_chart_Init()
+ 291          {
+ 292   1        #define Dynamic_chart_adress_vp 0x1907
+ 293   1        u8 buff_dynamic[2]={0x00,0x02};
+ 294   1        //第三条曲线最后归总的曲线从1*1，变成2*2 写入VP指针
+ 295   1          WriteDGUS(Dynamic_chart_adress_vp,buff_dynamic,sizeof(buff_dynamic));
+ 296   1        
+ 297   1      }
+ 298          void dynamic_first_Init(u16 x1,u16 y1,u16 x2,u16 y2)
+ 299          {
+ 300   1          #define CHART_ADDR_dynamic      0xd000  //动态曲线功能所对应的系统变量接口地址
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 6   
+
+ 301   1        #define CHART_NUM_dynamic     0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
+ 302   1        //#define POINT_NUM     1       //一次性写入多少个数据点
+ 303   1        #define colour_dynamci 0Xf800
+ 304   1        u8 chart_cmd[16] = {0x00,0x02,0x0f,CHART_NUM_dynamic};
+ 305   1        chart_cmd[4] = (u8)(colour_dynamci>>8);//曲线通道id
+ 306   1        chart_cmd[5] = (u8)(colour_dynamci&0xff);//一次性写入多少个数据点
+ 307   1        chart_cmd[6] = (u8)(x1>>8);//x1
+ 308   1        chart_cmd[7] = (u8)(x1&0xff);
+ 309   1        chart_cmd[8] = (u8)(y1>>8);//y1
+ 310   1        chart_cmd[9] = (u8)(y1&0xff);
+ 311   1        chart_cmd[10] = (u8)(x2>>8);//x2
+ 312   1        chart_cmd[11] = (u8)(x2&0xff);
+ 313   1        chart_cmd[12] = (u8)(y2>>8);//y2
+ 314   1        chart_cmd[13] = (u8)(y2&0xff);
+ 315   1        chart_cmd[14] = (u8)0xff;//y2
+ 316   1        chart_cmd[15] = (u8)0x00;     
+ 317   1        Adress_Now_dynamic=CHART_ADDR_dynamic+0x7;
+ 318   1        WriteDGUS(CHART_ADDR_dynamic,chart_cmd,sizeof(chart_cmd));
+ 319   1        dynamic_X_zuobiao=tubiao_0zuobiao_x+2;
+ 320   1      }
+ 321          void dynamic_Write_New(u16 x1,u8 y1_h,u8 y1_l)//每次写3字
+ 322          {
+ 323   1      
+ 324   1          u8 chart_cmd[6] = {0};
+ 325   1          u8 chart[2]={0};
+ 326   1          u16 y1;
+ 327   1          EA=0; 
+ 328   1        chart_cmd[0] = (u8)(x1>>8);//x1
+ 329   1        chart_cmd[1] = (u8)(x1&0xff);
+ 330   1        chart_cmd[2] = (u8)(y1_h);//y1
+ 331   1        chart_cmd[3] = (u8)(y1_l);    //0xa007 
+ 332   1        chart_cmd[4] = (u8)0xff;
+ 333   1        chart_cmd[5] = (u8)0x00;      //0xa007 
+ 334   1          y1=((u16)(y1_h))<<8 | (u16)(y1_l);
+ 335   1          /******************判断xy的坐标是否超出表格值**********************************/
+ 336   1          if(x1>=(tubiao_chang+tubiao_zuoshang_x))  //超出右侧长度值
+ 337   1          {
+ 338   2            x1=tubiao_chang+tubiao_zuoshang_x;
+ 339   2          }
+ 340   1          else if(x1<tubiao_zuoshang_x){x1=tubiao_zuoshang_x;}
+ 341   1          
+ 342   1          if(y1>=(tubiao_zuoshang_y+tubiao_kuan))
+ 343   1          {
+ 344   2            y1=tubiao_zuoshang_y+tubiao_kuan-2;
+ 345   2          }
+ 346   1          else if(y1<tubiao_zuoshang_y){y1=tubiao_zuoshang_y+2;}
+ 347   1          
+ 348   1          /******************************************************************************/
+ 349   1          WriteDGUS(Adress_Now_dynamic,chart_cmd,sizeof(chart_cmd));
+ 350   1          Adress_Now_dynamic=Adress_Now_dynamic+0x2;
+ 351   1          EA=1;
+ 352   1      }
+ 353            u8 dynamic_y[2];
+ 354          void dynamic_X_Y_huoqu()    //对第一条曲线进行拉伸
+ 355          {
+ 356   1      
+ 357   1        uint i,j=0;
+ 358   1      //  u16 AD_NOW;
+ 359   1        uint draw_num=0;
+ 360   1      float beishu=0;
+ 361   1        float cha;
+ 362   1      u16 adress_now;
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 7   
+
+ 363   1        EA=0;
+ 364   1        adress_now=CHART_ADDR+0x4;
+ 365   1        draw_num=290-chart_num;
+ 366   1      //  beishu=chart_num/draw_num;
+ 367   1        beishu=(uint)((290.00/(float)(chart_num))*4);
+ 368   1            j=beishu;
+ 369   1        dynamic_first_Init(tubiao_0zuobiao_x,tubiao_0zuobiao_y,tubiao_0zuobiao_x+2,tubiao_0zuobiao_y);
+ 370   1        //AD_NOW=Adress_Now-0x1-0xb002;
+ 371   1        
+ 372   1        
+ 373   1        
+ 374   1                if(T_First==T_dynamic)  //距离没有变化
+ 375   1              {  
+ 376   2                              for(i=0;i<=289;i++) //2*2曲线 长度是580 一共要写入192个点每个点间距1个像素
+ 377   2                {
+ 378   3                    adress_now=adress_now+0x2;
+ 379   3                    ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
+ 380   3                    dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 381   3                    dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 382   3                }
+ 383   2              }
+ 384   1              
+ 385   1              else if(beishu!=1)
+ 386   1              {
+ 387   2                    for(i=0;i<=289;i++) //2*2曲线 长度是580 一共要写入192个点每个点间距1个像素
+ 388   2                {
+ 389   3                    if(j>=beishu)
+ 390   3                    {
+ 391   4                      j=1;
+ 392   4                      adress_now=adress_now+0x2;
+ 393   4                      ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
+ 394   4                      dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 395   4                      dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 396   4                    }
+ 397   3                    else
+ 398   3                    {
+ 399   4                      j++;
+ 400   4                      dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 401   4                      dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 402   4                      
+ 403   4                    }
+ 404   3                    
+ 405   3                    
+ 406   3                }
+ 407   2              }
+ 408   1              else //>=195
+ 409   1              {
+ 410   2                cha=290-chart_num;
+ 411   2                beishu=((float)(chart_num)/cha)*5;
+ 412   2                j=0;
+ 413   2                for(i=0;i<=289;i++)
+ 414   2                {
+ 415   3                  j++;
+ 416   3                  if(j>=beishu)
+ 417   3                  {
+ 418   4                    j=1;
+ 419   4                                    dynamic_X_zuobiao=dynamic_X_zuobiao+0Xa;
+ 420   4                      dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 421   4                  }
+ 422   3                  else 
+ 423   3                  {
+ 424   4                    j++;
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 8   
+
+ 425   4                      adress_now=adress_now+0x2;
+ 426   4                      ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
+ 427   4                      dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 428   4                      dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 429   4                  }
+ 430   3                  
+ 431   3                  if(dynamic_X_zuobiao>=tubiao_zuoshang_x+tubiao_chang-0x2)
+ 432   3                  {
+ 433   4                    break;
+ 434   4                  }
+ 435   3                }
+ 436   2              }
+ 437   1              
+ 438   1              
+ 439   1              
+ 440   1              
+ 441   1              
+ 442   1      //  if(beishu!=0)   //曲线一的点小于192个点
+ 443   1      //  {
+ 444   1      //          for(i=0;i<=289;i++) //2*2曲线 长度是580 一共要写入192个点每个点间距1个像素
+ 445   1      //      {
+ 446   1      //        
+ 447   1      //        //先判断第一条曲线没写完就结束的情况下
+ 448   1      
+ 449   1      //        if(T_All==T_dynamic)  //距离没有变化
+ 450   1      //        {  
+ 451   1      //              adress_now=adress_now+0x2;
+ 452   1      //              ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
+ 453   1      //              dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 454   1      //              dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 455   1      //        }
+ 456   1      //        else
+ 457   1      //        {
+ 458   1      //        
+ 459   1      //        if(j>beishu)
+ 460   1      //        {
+ 461   1      
+ 462   1      //          j=1;
+ 463   1      //          
+ 464   1      //              dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 465   1      //              dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 466   1      //          
+ 467   1      //        }
+ 468   1      //        else 
+ 469   1      //            {
+ 470   1      //              j++;
+ 471   1      //              adress_now=adress_now+0x2;
+ 472   1      //              ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
+ 473   1      //              dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 474   1      //              dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 475   1      //            }
+ 476   1      //        
+ 477   1      //          }
+ 478   1      //          //dynamic_Y_zuobiao=(u16)(dynamic_y[0])<<8  ||  (u16)(dynamic_y[1]);
+ 479   1      
+ 480   1      //      }
+ 481   1      //  }
+ 482   1      //  else  //剩下的点数大于已经写入的 总共290点 已经写入90 还需要200
+ 483   1      //  {
+ 484   1      //    
+ 485   1      //    beishu=draw_num/chart_num;
+ 486   1      //    j=beishu;
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 9   
+
+ 487   1      //              for(i=0;i<=289;i++) //2*2曲线 长度是580 一共要写入192个点每个点间距1个像素
+ 488   1      //      {
+ 489   1      //            if(j>=beishu)
+ 490   1      //        {
+ 491   1      
+ 492   1      //          j=0;                  
+ 493   1      //              adress_now=adress_now+0x2;
+ 494   1      //              ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
+ 495   1      //              dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 496   1      //              dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 497   1      
+ 498   1      //          
+ 499   1      //        }
+ 500   1      //        else 
+ 501   1      //            {
+ 502   1      //              j++;
+ 503   1      //              dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 504   1      //              dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 505   1      //            }
+ 506   1          //  }
+ 507   1        //}
+ 508   1        EA=1;
+ 509   1      }
+ 510          void dynamic_X_Y_huoqu_2()  //对第一条和第二条曲线进行抽样
+ 511          {
+ 512   1        //u8 dynamic_y[2];
+ 513   1        u16 num_all;
+ 514   1        u16 num_throwaway,adress_now,adress_now_2;
+ 515   1        u8 i,j;
+ 516   1        u16 num_reset=0;
+ 517   1        float bei=0.0;
+ 518   1        EA=0;
+ 519   1        adress_now=CHART_ADDR+0x4;
+ 520   1        adress_now_2=CHART_ADDR_2+0x4;
+ 521   1        num_all=(chart_num_2+chart_num)-290;
+ 522   1        bei=((float)(chart_num_2+chart_num))/(float)(num_all);
+ 523   1        num_throwaway=bei*2;
+ 524   1        dynamic_first_Init(tubiao_0zuobiao_x,tubiao_0zuobiao_y,tubiao_0zuobiao_x+2,tubiao_0zuobiao_y);
+ 525   1        //AD_NOW=Adress_Now-0x1-0xb002;
+ 526   1        if(num_throwaway!=0)    //曲线一的点小于192个点
+ 527   1        {
+ 528   2                for(i=0;i<=285;i++) //2*2曲线 长度是580 一共要写入192个点每个点间距1个像素
+ 529   2            {
+ 530   3                  if(j>=num_throwaway)
+ 531   3                  {
+ 532   4                    num_reset++;
+ 533   4                    j=1;
+ 534   4                      if(adress_now<=Adress_Now-0x2)
+ 535   4                    {
+ 536   5                      adress_now=adress_now+0x6;  
+ 537   5                    //  ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y));           
+ 538   5                    }
+ 539   4                    else  if(adress_now_2<=Adress_Now_2-0x2)
+ 540   4                    {
+ 541   5                      adress_now_2=adress_now_2+0x6;    
+ 542   5                    //  ReadDGUS(adress_now_2,dynamic_y,sizeof(dynamic_y));             
+ 543   5                    }
+ 544   4                    else break;
+ 545   4                  }
+ 546   3                  else 
+ 547   3                  {
+ 548   4                    j++;            
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 10  
+
+ 549   4                  }
+ 550   3                  
+ 551   3                  
+ 552   3                    if(adress_now<=Adress_Now-0x2)
+ 553   3                    {
+ 554   4                      adress_now=adress_now+0x2;  
+ 555   4                      ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
+ 556   4                      
+ 557   4                    }
+ 558   3                    else if(adress_now_2<=Adress_Now_2-0x2)
+ 559   3                    {
+ 560   4                      adress_now_2=adress_now_2+0x2;    
+ 561   4                      ReadDGUS(adress_now_2,dynamic_y,sizeof(dynamic_y));         
+ 562   4                    } 
+ 563   3                    else    DelayMs(5);         
+ 564   3                    
+ 565   3                    DelayMs(10);
+ 566   3                    dynamic_X_zuobiao=dynamic_X_zuobiao+0X2;
+ 567   3                    dynamic_Write_New(dynamic_X_zuobiao,dynamic_y[0],dynamic_y[1]);
+ 568   3                      DelayMs(10);
+ 569   3            
+ 570   3              
+ 571   3                }
+ 572   2        
+ 573   2              }
+ 574   1        EA=1;
+ 575   1      }
+ 576          
+ 577          
+ 578          void dynamic_draw()
+ 579          {
+ 580   1        EA=0;
+ 581   1        if(MODE_2_RUN_Draw==1&& dynamic_static_flag)
+ 582   1        {
+ 583   2          if(second_firstdraw_flag) //用到第二条曲线 第三条曲线应该为第一条曲线和第二条曲线的抽样
+ 584   2          {
+ 585   3            dynamic_X_Y_huoqu_2();MODE_2_RUN_Draw=0;      dynamic_draw_chart_Init();
+ 586   3          }
+ 587   2          else
+ 588   2            {dynamic_X_Y_huoqu();     dynamic_draw_chart_Init();}   //只用到第一条曲线
+ 589   2          MODE_2_RUN_Draw=0;
+ 590   2          //  dynamic_X_Y_huoqu();
+ 591   2        
+ 592   2        }
+ 593   1        EA=1;
+ 594   1      }
+ 595          
+ 596          
+ 597          
+ 598          uint maichong_off=0;  //脉冲off开启 现在uv处于关闭状态 折线继续接着上次的画
+ 599          void zhexian_Draw()
+ 600          {
+ 601   1      //  if(Off_On_pwm_flag==0)    //受PWM的影响 1时是休息状态 0为工作状态
+ 602   1      //  {
+ 603   1      //    L_mm_TO_P_mw(L_int);
+ 604   1      //  }
+ 605   1      //  else if(MODE!=1) change_P_mW=-1;
+ 606   1        EA=0; 
+ 607   1        dynamic_draw();
+ 608   1        if(MODE==1)S_D_Surfaces_All();  //直径和面积
+ 609   1        
+ 610   1        if(Draw_W_Flag==1)  //开始在屏幕上画线
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 11  
+
+ 611   1        {
+ 612   2        
+ 613   2          
+ 614   2          if(First_Draw_Flag==0)    //记录第一次初始值的参考线(只执行一次)
+ 615   2          {
+ 616   3      
+ 617   3            if(MODE==2)Page_Lasttime=Page_zhiliao;
+ 618   3            else {Page_Lasttime=Page_s[1];}   //开的时候记录当前页面 自动结束后会继续页面判断
+ 619   3            
+ 620   3            T_doing=0;
+ 621   3            
+ 622   3            if(MODE==1 || MODE==4) {Lock_current_page();}   //上锁 禁止乱换页面
+ 623   3      
+ 624   3          //  T_All=T_First;          //自动结束后 下才开启前 总时间更新  
+ 625   3            
+ 626   3            X_zuobiao=tubiao_zuoshang_x;
+ 627   3            
+ 628   3            chart_num=0;
+ 629   3            First_Draw_Flag=1;
+ 630   3            P_mW_First=change_P_mW_First;           //获取初始值的静态功率 不再变化
+ 631   3            
+ 632   3            
+ 633   3            /********************************只执行一次*********************************/     
+ 634   3              if(MODE_Static==1)
+ 635   3              {
+ 636   4                    //  W_mJ_zong=P_mW_First*T_First;       //获取初始值的能量 MODE1能量不是固定的是随着距离变化而变化        
+ 637   4                  S_Write=(float)((T_First-1)/tubiao_chang*2*1000.0f);
+ 638   4        
+ 639   4              }
+ 640   3              else if(MODE_Static==2)
+ 641   3              {
+ 642   4                //W_mJ_zong=W_FINISH;         //获得初始值的能量 MODE2能量是固定值
+ 643   4                  if(dynamic_static_flag)Draw_Rest_2();
+ 644   4                  S_Write=(float)((T_First-1)/tubiao_chang*2*1000.0f);
+ 645   4            
+ 646   4              }
+ 647   3              else if(MODE==3)
+ 648   3              {
+ 649   4                  
+ 650   4                  S_Write=(float)((T_First-1)/tubiao_chang*2*1000.0f);
+ 651   4              }
+ 652   3              else if(MODE==4)
+ 653   3              {
+ 654   4                S_Write=(float)((T_First-1)/tubiao_chang*2*1000.0f);
+ 655   4              }
+ 656   3              
+ 657   3              
+ 658   3              if(change_P_mW>=0)
+ 659   3            {
+ 660   4              Y_zuobiao = tubiao_0zuobiao_y-(change_P_mW/2.5*(tubiao_0zuobiao_y-tubiao_zuoshang_y));
+ 661   4            }
+ 662   3            else 
+ 663   3              {
+ 664   4                Y_zuobiao = tubiao_0zuobiao_y+((fabs(change_P_mW)/1*(tubiao_zuoshang_y+tubiao_kuan-tubiao_0zuobiao_y)
+             -));  
+ 665   4              }
+ 666   3              
+ 667   3              Y_zuobiao_static=Y_zuobiao;
+ 668   3              chart_num=1;
+ 669   3              sys_write_chart_zhexian_Two(tubiao_0zuobiao_x,tubiao_0zuobiao_y,tubiao_0zuobiao_x,tubiao_0zuobiao_y);
+ 670   3              sys_write_chart_zhexian_Two_Cankao(tubiao_zuoshang_x,Y_zuobiao,tubiao_zuoshang_x+tubiao_chang-2,Y_zuob
+             -iao);
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 12  
+
+ 671   3              
+ 672   3              X_zuobiao=tubiao_zuoshang_x+5;
+ 673   3              Draw_1ms=0;
+ 674   3          }
+ 675   2            /*************************************************************************************/
+ 676   2            if((UV_St==0&&Off_On_pwm_flag==0)||(Off_On_pwm_flag&&UV_St))
+ 677   2        {
+ 678   3          X_Y_huoqu();
+ 679   3          W_mJ_doing=(W_mJ_XIANSHI);
+ 680   3        }
+ 681   2          //sys_write_chart_zhexian_Two_Cankao(tubiao_zuoshang_x,Y_zuobiao_static,tubiao_zuoshang_x+tubiao_chang-2
+             -,Y_zuobiao_static);
+ 682   2        }
+ 683   1        EA=1;
+ 684   1      
+ 685   1      }
+ 686          
+ 687          
+ 688          void Draw_Reset()
+ 689          {
+ 690   1      
+ 691   1        u8 Reset[8]={0};
+ 692   1        /*********************************画当前模式的曲线*********************************/
+ 693   1        First_Draw_Flag=0;
+ 694   1        EA=0;
+ 695   1        Draw_W_Flag=0;    //停止画线
+ 696   1        //chart_num=0;
+ 697   1        X_zuobiao=tubiao_zuoshang_x;
+ 698   1        /******************************************************************************************/
+ 699   1        second_firstdraw_flag=0;  //第二次画图的初始化标志位
+ 700   1        T_doing=0;
+ 701   1        WriteDGUS(CHART_ADDR,Reset,sizeof(Reset));
+ 702   1        WriteDGUS(CHART_ADDR_cankao,Reset,sizeof(Reset));
+ 703   1        WriteDGUS(CHART_ADDR_dynamic,Reset,sizeof(Reset));
+ 704   1        WriteDGUS(CHART_ADDR_2,Reset,sizeof(Reset));
+ 705   1      }
+ 706          
+ 707          void Draw_Rest_2()
+ 708          {u8 Reset[8]={0};
+ 709   1          WriteDGUS(CHART_ADDR_dynamic,Reset,sizeof(Reset));
+ 710   1        WriteDGUS(CHART_ADDR_2,Reset,sizeof(Reset));
+ 711   1      }
+ 712          
+ 713          
+ 714          /*********************************************************************************
+ 715          中心模式：求面积和直径  面积是区域模式的四分之一，直径是区域模式的二分之一
+ 716          区域模式：求面积和直径  
+ 717          气溶胶模式：求体积
+ 718          ********************************************************************************/
+ 719          float Tanx=0.4557;
+ 720          float pai=3.1415;
+ 721          float Tan_zhongxin=0.04366094;
+ 722          float zhongxin_35mm=0.4008159;  //=0.0175m/tan2.5
+ 723            float L_m=0.00;       //距离 单位:M
+ 724            float Square=0.00;      //面积 单位：M^2
+ 725            float D=0.00;         //直径 单位：M
+ 726            float Volume=0.00;          //气溶胶体积 单位：M^3
+ 727          void S_D_Surfaces_All()
+ 728          {
+ 729   1      
+ 730   1        L_m =  (float)(L_int/1000.000)+zhongxin_35mm;
+ 731   1        if(W_S[0]==2)//zx
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 13  
+
+ 732   1        {
+ 733   2        D = Tan_zhongxin*2*L_m;
+ 734   2        Square  = (float)(pow(L_m*Tan_zhongxin,2)*pai); 
+ 735   2        }
+ 736   1        else 
+ 737   1        {
+ 738   2        D = Tanx*2*L_m;
+ 739   2        Square  = (float)(pow(L_m*Tanx,2)*pai); 
+ 740   2        }
+ 741   1        Volume  = Square*L_m/3.00;
+ 742   1      }
+ 743          
+ 744          /********************************************读取当前页面并锁定*************************************/
+ 745          
+ 746          static struct{
+ 747            u16 Head;
+ 748            u8 page_0;//固定为0x00
+ 749            u8 page_1;
+ 750            
+ 751              u8 touch_id;
+ 752              u8 touch_daima;
+ 753          
+ 754              u16 mode;
+ 755          
+ 756          }PageLock;
+ 757          uint Current_Lock=0;    //0表示未上锁
+ 758            u16 mode_close = 0x0000;
+ 759            u16 mode_open = 0x0001;
+ 760          
+ 761            u16 ControlPageLock_Adress = 0xb0;
+ 762            u16 ReadCurrentPage_Adress  = 0x14;
+ 763          
+ 764            u8 PageSliding = 0x0b;
+ 765            u8 Returnkey = 0x05;
+ 766            u8 zengliang=0x03;
+ 767            u8 Current_page[2];
+ 768          void Lock_current_page()
+ 769          {
+ 770   1        EA=0;
+ 771   1          PageLock.Head=0x5aa5;
+ 772   1          PageLock.page_0=0x00;
+ 773   1      
+ 774   1        
+ 775   1        if(MODE==1)       
+ 776   1        {
+ 777   2              if(W_S[0]==1)//气溶胶
+ 778   2          {
+ 779   3          WriteDGUS(0x5105,(uint8_t *)&(icon_exit),sizeof(icon_exit));
+ 780   3          Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 781   3          }
+ 782   2          else if(W_S[0]==2)//zx
+ 783   2          {
+ 784   3          WriteDGUS(0x5106,(uint8_t *)&(icon_exit),sizeof(icon_exit));
+ 785   3          Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 786   3          }
+ 787   2              else if(W_S[0]==3)//qy
+ 788   2          {
+ 789   3                WriteDGUS(0x5107,(uint8_t *)&(icon_exit),sizeof(icon_exit));
+ 790   3          Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 791   3      
+ 792   3          }
+ 793   2        }
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 14  
+
+ 794   1        
+ 795   1        ReadDGUS(ReadCurrentPage_Adress,(uint8_t *)&Current_page,sizeof(Current_page)); //返回值 00 06
+ 796   1        PageLock.page_1=Current_page[1];
+ 797   1        PageLock.touch_id=0x00;     //滑动翻页设置为 0位置
+ 798   1        PageLock.touch_daima=PageSliding;
+ 799   1        PageLock.mode=mode_close;
+ 800   1      
+ 801   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 802   1        while(1)
+ 803   1        {
+ 804   2          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&Current_page,sizeof(Current_page));
+ 805   2          if(Current_page[0]==Current_page[1])
+ 806   2          {break;}
+ 807   2        }
+ 808   1        
+ 809   1        PageLock.touch_id=0x01;   //返回键 设置为1位置
+ 810   1        PageLock.touch_daima=Returnkey;
+ 811   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 812   1          while(1)
+ 813   1        {
+ 814   2          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&Current_page,sizeof(Current_page));
+ 815   2          if(Current_page[0]==Current_page[1])
+ 816   2          {break;}
+ 817   2        }
+ 818   1        Current_Lock=1;
+ 819   1        EA=1;
+ 820   1      }
+ 821          
+ 822          void Unlock_current_page()
+ 823          {
+ 824   1        u8 page_status[2];
+ 825   1        EA=0;
+ 826   1        if(Current_Lock==1)
+ 827   1        {
+ 828   2          
+ 829   2            if(MODE==1)       
+ 830   2        {
+ 831   3          if(W_S[0]==1)//气溶胶
+ 832   3          {
+ 833   4          WriteDGUS(0x5105,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 834   4          Unlock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 835   4          }
+ 836   3          else if(W_S[0]==2)//zx
+ 837   3          {
+ 838   4                WriteDGUS(0x5106,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 839   4          Unlock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 840   4      
+ 841   4          }
+ 842   3              else if(W_S[0]==3)//qy
+ 843   3          {
+ 844   4          WriteDGUS(0x5107,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 845   4          Unlock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 846   4          }
+ 847   3        }
+ 848   2        
+ 849   2            ReadDGUS(ReadCurrentPage_Adress,(uint8_t *)&Current_page,sizeof(Current_page)); //返回值 00 06
+ 850   2            PageLock.page_1=Current_page[1];
+ 851   2            PageLock.mode=mode_open;
+ 852   2            PageLock.touch_daima=Returnkey; 
+ 853   2            PageLock.touch_id=0x01; 
+ 854   2            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 855   2        while(1)
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 15  
+
+ 856   2        {
+ 857   3          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&page_status,sizeof(page_status));
+ 858   3          if(page_status[0]==page_status[1])
+ 859   3          {break;}
+ 860   3        }
+ 861   2            PageLock.touch_daima=PageSliding;
+ 862   2            PageLock.touch_id=0x00; 
+ 863   2          
+ 864   2            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 865   2          while(1)
+ 866   2        {
+ 867   3          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&page_status,sizeof(page_status));
+ 868   3          if(page_status[0]==page_status[1])
+ 869   3          {break;}
+ 870   3        }
+ 871   2            Current_Lock=0;
+ 872   2        }
+ 873   1        EA=1;
+ 874   1      }
+ 875          void Lock_current_page_zengliang(u8 id_1,u8 daima_1,u8 id_2,u8 daima_2)
+ 876          {
+ 877   1        u8 Current_page[2];
+ 878   1        EA=0;
+ 879   1          PageLock.Head=0x5aa5;
+ 880   1          PageLock.page_0=0x00;
+ 881   1      
+ 882   1        ReadDGUS(ReadCurrentPage_Adress,(uint8_t *)&Current_page,sizeof(Current_page)); //返回值 00 06
+ 883   1        PageLock.page_1=Current_page[1];
+ 884   1        PageLock.touch_id=id_1;     //滑动翻页设置为 0位置
+ 885   1        PageLock.touch_daima=daima_1;
+ 886   1        PageLock.mode=mode_close;
+ 887   1      
+ 888   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 889   1        while(1)
+ 890   1        {
+ 891   2          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&Current_page,sizeof(Current_page));
+ 892   2          if(Current_page[0]==Current_page[1])
+ 893   2          {break;}
+ 894   2        }
+ 895   1        
+ 896   1        //if(id_2=0xff)break;
+ 897   1        
+ 898   1        PageLock.touch_id=id_2;   //返回键 设置为1位置
+ 899   1        PageLock.touch_daima=daima_2;
+ 900   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 901   1          while(1)
+ 902   1        {
+ 903   2          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&Current_page,sizeof(Current_page));
+ 904   2          if(Current_page[0]==Current_page[1])
+ 905   2          {break;}
+ 906   2        }
+ 907   1        EA=1;
+ 908   1        //Current_Lock=1;
+ 909   1      }
+ 910          void Unlock_current_page_zengliang(u8 id_1,u8 daima_1,u8 id_2,u8 daima_2)
+ 911          {
+ 912   1        u8 Current_page[2];
+ 913   1        EA=0;
+ 914   1        ReadDGUS(ReadCurrentPage_Adress,(uint8_t *)&Current_page,sizeof(Current_page)); 
+ 915   1          PageLock.page_1=Current_page[1];
+ 916   1            PageLock.touch_id=id_2;   //返回键 设置为1位置
+ 917   1        PageLock.touch_daima=daima_2;
+C51 COMPILER V9.59.0.0   START_WIN                                                         04/24/2025 12:33:11 PAGE 16  
+
+ 918   1            PageLock.mode=mode_open;
+ 919   1            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 920   1        while(1)
+ 921   1        {
+ 922   2          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&Current_page,sizeof(Current_page));
+ 923   2          if(Current_page[0]==Current_page[1])
+ 924   2          {break;}
+ 925   2        }
+ 926   1            PageLock.touch_daima=daima_1;
+ 927   1            PageLock.touch_id=id_1; 
+ 928   1          
+ 929   1            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 930   1        
+ 931   1        //  if(id_2=0xff)break;
+ 932   1          while(1)
+ 933   1        {
+ 934   2          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&Current_page,sizeof(Current_page));
+ 935   2          if(Current_page[0]==Current_page[1])
+ 936   2          {break;}
+ 937   2        }
+ 938   1      EA=1;
+ 939   1        
+ 940   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5253    ----
+   CONSTANT SIZE    =    106    ----
+   XDATA SIZE       =    113     194
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

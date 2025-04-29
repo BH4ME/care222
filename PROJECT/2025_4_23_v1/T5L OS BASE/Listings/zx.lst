@@ -1,0 +1,29 @@
+C51 COMPILER V9.59.0.0   ZX                                                                04/23/2025 19:11:06 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE ZX
+OBJECT MODULE PLACED IN .\Objects\zx.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE PAGE\zx.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.\A
+                    -PP;.\PAGE) DEBUG PRINT(.\Listings\zx.lst) TABS(2) OBJECT(.\Objects\zx.obj)
+
+line level    source
+
+   1          #include "zx.h"
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
