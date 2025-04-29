@@ -1,0 +1,188 @@
+C51 COMPILER V9.59.0.0   UART4                                                             04/24/2025 12:33:09 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE UART4
+OBJECT MODULE PLACED IN .\Objects\uart4.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\uart4.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\
+                    -Listings\uart4.lst) TABS(2) OBJECT(.\Objects\uart4.obj)
+
+line level    source
+
+   1          #include "uart4.h"
+   2          #include "T5LUart4.h"
+   3          
+   4            // uint16_t TIME_Height[3]={0};
+   5          void led1_on( void )
+   6          {  
+   7   1      //uint16_t x=0x1234;
+   8   1      //    LED1 = 1;
+   9   1      
+  10   1                printf("\n  ½ÓÊÕÕý³£  \n\n\n\n");
+  11   1      }
+  12          
+  13          
+  14          void led1_off( void )
+  15          {
+  16   1      uint i;
+  17   1        uint8_t dat[16]={0};
+  18   1        u16 dat_Ad[2];
+  19   1        uint16_t Ad4=0x0028;
+  20   1      //  uint Adress;
+  21   1        uint beishu;
+  22   1        //uint16_t =ad_0x8;
+  23   1        DelayMs(5);
+  24   1      //  printf("\n    ÕýÔÚ¶ÁÈ¡Êý¾ÝÖÐ.....");
+  25   1        DelayMs(5);
+  26   1        
+  27   1      
+  28   1        ReadNorFlash_Str(0x0,(uint8_t*)&dat_Ad,2);
+  29   1        printf("\n  µ±Ç°µØÖ· store adress %hx",dat_Ad[1]);DelayMs(5);
+  30   1        //ReadNorFlash_Str(Adress,(uint8_t*)&dat,8);
+  31   1      
+  32   1        //beishu=(Adress/8)-5;
+  33   1        beishu=0x4000-0x28;
+  34   1      
+  35   1      
+  36   1        for(i=0;i<beishu;i++)
+  37   1        {
+  38   2        ReadNorFlash_Str(Ad4,(uint8_t*)&dat,8);
+  39   2          DelayMs(5);
+  40   2          
+  41   2          if(dat[0]==0xaa)
+  42   2          {
+  43   3            if(dat[7]==0xff){printf("\n ×´Ì¬£º¹Ø»ú");}
+  44   3            else if(dat[7]==0xbb){printf("\n  ×´Ì¬£º¿ª»ú");}
+  45   3            else if(dat[7]==0xcc){printf("\n  ×´Ì¬£º¿ªÆôUV");
+  46   4      
+  47   4                switch(dat[1])
+  48   4          {
+  49   5            //case 0:{JumpPage(Page_home);  break;}
+  50   5            
+  51   5            case 1:{printf("\n  Ä£Ê½£ºÆøÈÜ½ºÄ£Ê½"); break;  }
+  52   5              
+  53   5            case 2: {printf("\n Ä£Ê½£ºÖÐÐÄÏû¶¾Ä£Ê½"); break;}
+  54   5            
+C51 COMPILER V9.59.0.0   UART4                                                             04/24/2025 12:33:09 PAGE 2   
+
+  55   5            case 3: {printf("\n Ä£Ê½£ºÇøÓòÏû¶¾Ä£Ê½"); break;}
+  56   5      
+  57   5            case 4: {printf("\n Ä£Ê½£º³ÌÐò»¯Ïû¶¾Ä£Ê½"); break;}
+  58   5      
+  59   5            case 5: {printf("\n Ä£Ê½£ºÖÎÁÆÄ£Ê½"); break;}
+  60   5            
+  61   5            case 6: {printf("\n Ä£Ê½£ºÊÖ¶¯Ä£Ê½"); break;}
+  62   5            
+  63   5            case 10:{printf("\n Ä£Ê½£º³ÌÐò»¯Ïû¶¾Ä£Ê½");break;}
+  64   5                  case 11:  {printf("\n Ä£Ê½£ºÖÎÁÆÄ£Ê½"); break;}
+  65   5            default :break;
+  66   5            
+  67   5            }
+  68   4          }
+  69   3            else if(dat[7]==0xee){printf("\n  ×´Ì¬£º¹Ø±ÕUV");}
+  70   3            else if(dat[7]==0xdd){printf("\n  ×´Ì¬£ºÔÝÍ£UV");}
+  71   3            
+  72   3                DelayMs(5);
+  73   3        printf("\n  µ±Ç°µØÖ·£º%hx     Ê±¼ä£º 20%2bdÄê %2bdÔÂ  %2bdÈÕ    %2bd£º%2bd£º%2bd  \n\n\n\n",Ad4,dat[8],dat[9],da
+             -t[10],dat[12],dat[13],dat[14]);
+  74   3      
+  75   3            
+  76   3          }
+  77   2          else 
+  78   2          {
+  79   3                DelayMs(5);
+  80   3                printf("\n  µ±Ç°µØÖ·£º%hx     Î´ÊÕµ½ÓÐÐ§Öµ  \n\n\n\n");
+  81   3          }
+  82   2      
+  83   2        DelayMs(15);
+  84   2          if(Ad4>=0x4000)
+  85   2          {
+  86   3            //Ad4=0x28;
+  87   3            break;
+  88   3          }
+  89   2          else {Ad4=0x8+Ad4;}
+  90   2        }
+  91   1        
+  92   1          printf("\r\n  ¶ÁÈ¡Íê³É  \n\n\n\n");
+  93   1         // LED1 = 0;
+  94   1      }
+  95          void led2_on( void )
+  96          {
+  97   1        uint i;
+  98   1        uchar dat_txst[2]={0x0,0x28};
+  99   1        uint clean_0[8]={0};
+ 100   1        WriteNorFlash_Str(0x0,(uint8_t*)&dat_txst,2);
+ 101   1        printf("\r\n CLEAN NORFLASH (0x0~0x1),0x01 WRITE 0x28....NEXT DATA WILL WRITE IN 0x28 \n\n\n\n");
+ 102   1        for(i=0;i<=1022;i++)
+ 103   1        {
+ 104   2          WriteNorFlash_Str(0x28+(0x10*i),(uint8_t*)&clean_0,10);
+ 105   2          printf("\r\n CLEAN NORFLASH ADRESS  %hx \n\n\n\n",0x28+(0x10*i));
+ 106   2        }
+ 107   1        
+ 108   1          printf("\r\n CLEAN FINISH !!!!!!! ");
+ 109   1      }
+ 110           
+ 111          
+ 112            
+ 113          void led2_off( void )
+ 114          {
+ 115   1        uint Adress_Flag=1; u16 dat_Ad[2];
+C51 COMPILER V9.59.0.0   UART4                                                             04/24/2025 12:33:09 PAGE 3   
+
+ 116   1          ReadNorFlash_Str(0x0,(uint8_t*)&dat_Ad,2);
+ 117   1      
+ 118   1        
+ 119   1        DelayMs(5);
+ 120   1        //printf("ÕýÔÚ¶ÁÈ¡Êý¾ÝÖÐ....\n\n\n\n");
+ 121   1        DelayMs(5);
+ 122   1        
+ 123   1        printf("\n  µ±Ç°µØÖ· store adress %hx\n\n\n\n",dat_Ad[1]);DelayMs(5);
+ 124   1      //find_day();
+ 125   1      }
+ 126          
+ 127           /***********************/
+ 128          void led3_off( void )
+ 129          {
+ 130   1         // LED3 = 0;
+ 131   1      
+ 132   1        
+ 133   1      }
+ 134           
+ 135          //×¢²áledÃüÁî
+ 136          void led_register( void )
+ 137          {
+ 138   1        
+ 139   1          //³õÊ¼»¯ ×Ö·û´®ÃüÁîºÍ¶ÔÓ¦º¯Êý
+ 140   1          CMD_Name_Func led_cmds[] =
+ 141   1          {
+ 142   1              {"UV TEST", led1_on},                       // Ò»¸ö½á¹¹Ìå±äÁ¿´óÐ¡Îª 12 (×Ö·û´®´óÐ¡10 + º¯ÊýÃû´óÐ¡2
+             -)
+ 143   1              {"UV READ", led1_off},                     // Ò»¸ö½á¹¹Ìå±äÁ¿´óÐ¡Îª 12
+ 144   1              {"UV CLEAN", led2_on},
+ 145   1              {"UV ADRESS", led2_off},
+ 146   1      //        {"UV ", led3_on},
+ 147   1      //        {"led3 off", led3_off}
+ 148   1          };
+ 149   1       //printf("\nÈÎÎñ×¢²á³É¹¦");
+ 150   1          //½«ÃüÁîÌí¼Óµ½ÁÐ±íÖÐ
+ 151   1          register_cmds( led_cmds, ARRAY_SIZE( led_cmds ) );  // ARRAY_SIZE ÓÃÀ´¼ÆËã½á¹¹ÌåÊý×éÖÐ£¬Êý×éµÄ¸öÊý¡£¸öÊ
+             -ý=½á¹¹Ìå×Ü³¤¶È/µ¥¸öÊý×é³¤¶È
+ 152   1      
+ 153   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    855    ----
+   CONSTANT SIZE    =    640    ----
+   XDATA SIZE       =   ----     128
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

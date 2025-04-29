@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<TKStudioProject Name="T5L_DL" BuildTool="0" ToolVer="default" Version="3.00" Author="YinHandong[Òüº®¶¬]" ProjectGUID="{70D61E47-5583-451c-8DE7-2F8F633D08FB}">
+    <Configurations>
+        <Configuration Name="Target 1" CodeMode="2" MemMode="2" RTOS="0" T51FL="0" SIMCLK="24.000000" OCM51="{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }" OCR51="{ 0,0,128,0,0,0,128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }" CodeBank="0,2,0x0,0xffff," OutputDirectory=".\Objects\" OutputName="T5L_DGo" GENAPP="1" GENLIB="0" ListingDirectory=".\Objects\" OPTLT="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" OPTDBG="1,-1,1,1,1,0,()" BeforeCmp="0??0??" BeforeBuild="0??0??" AfterBuild="1?Objects\hextoBin.bat?0??" DEVICE="T5" VENDOR="DWIN" FAMINY="0" asModify="0" cModify="0">
+            <Tool Name="C51Tool" C51FL="576784" C51VA="0" C51DEF="" C51UDF="" C51MSC="" INCC5=".\T5LDrv" />
+            <Tool Name="A51Tool" A51FL="68" A51SET="" A51RST="" A51MSC="" INCA5="" />
+            <Tool Name="Lx51Tool" LX51FL="4" LX51COB="" LX51XDB="0x8000-0xFFFF" LX51PDB="" LX51BIB="" LX51DAB="" LX51IDB="" LX51PRC="" LX51STK="" LX51COS="" LX51XDS="" LX51BIS="" LX51DAS="" LX51IDS="" LX51OVL="" LX51MSC="" LX51DWN="16" />
+            <DeviceProperties Item0='BOOK0=&quot;DATASHTS\DWIN\T5.pdf&quot;(&quot;Data Sheet&quot;)' Item1="CPU=IRAM(0-0xFF) CLOCK(24000000) MODC2 PMW DPC BSE MDU_R515" Item2='MON=S8051.DLL TCore51.DLL(&quot;-pR8051XC&quot;)' Item3='REGFILE=M5.h(&quot;DWIN&quot;)' Item4='SFILE=&quot;LIB\STARTUP_M5.A51&quot; (&quot;M5 Startup Code&quot;)' Item5='SIM=S8051.DLL DCore51.DLL(&quot;-pR8051XC&quot;)' />
+            <DeviceDescription Description="DWIN T5 Device" />
+        </Configuration>
+    </Configurations>
+    <Files>
+        <Filter Name="Main">
+            <File RelativePath=".\main.c">
+                <Header RelativePath=".\T5LDriver\T5LDriver.h" />
+                <Header RelativePath="T5LDriver\T5LOS8051.h" />
+                <Header RelativePath=".\T5LDriver\T5LUart4.h" />
+            </File>
+            <File RelativePath=".\STARTUP_M5.A51" />
+        </Filter>
+        <Filter Name="T5LDriver">
+            <File RelativePath=".\T5LDriver\T5LDriver.C">
+                <Header RelativePath=".\T5LDriver\T5LDriver.h" />
+                <Header RelativePath=".\T5LDriver\T5LOS8051.h" />
+            </File>
+            <File RelativePath=".\T5LDriver\T5LUart2.c">
+                <Header RelativePath=".\T5LDriver\T5LDriver.h" />
+                <Header RelativePath=".\T5LDriver\T5LOS8051.h" />
+                <Header RelativePath=".\T5LDriver\T5LUart2.h" />
+            </File>
+            <File RelativePath=".\T5LDriver\T5LUart4.c">
+                <Header RelativePath=".\T5LDriver\T5LDriver.h" />
+                <Header RelativePath=".\T5LDriver\T5LOS8051.h" />
+                <Header RelativePath=".\T5LDriver\T5LUart4.h" />
+                <Header RelativePath=".\T5LDriver\crc16table.h" />
+            </File>
+        </Filter>
+    </Files>
+</TKStudioProject>

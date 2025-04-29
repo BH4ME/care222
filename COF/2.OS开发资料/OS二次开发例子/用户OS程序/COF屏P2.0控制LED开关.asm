@@ -1,0 +1,23 @@
+ORG 1000H ;意义：接下来的指令放在0x1000地址
+GOTO MAIN ;强制跳转到MAIN
+NOP       ;无操作
+NOP
+NOP
+ORG 1080H
+
+MAIN:
+CONFIG	0,0,0X80	;配置IO口模式，P1.7设置为输出
+LDWR	R0,0X1000
+MOVXR	R10,1,1
+IJNE	R11,0,开		;读取VP1000并判断值
+
+关:
+OUTPUT	0,0,0X00	;向P1.7输出0
+GOTO	结束
+
+开:
+OUTPUT	0,0,0X80	;向如果值是1，则向P1.7输出1
+GOTO	结束
+
+结束:
+END

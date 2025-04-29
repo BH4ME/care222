@@ -1,0 +1,91 @@
+C51 COMPILER V9.60.0.0   BUTTOM                                                            02/20/2023 19:49:22 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BUTTOM
+OBJECT MODULE PLACED IN .\Objects\buttom.obj
+COMPILER INVOKED BY: D:\Keil\Keil C51\C51\BIN\C51.EXE Sources\buttom.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND
+                    - PRINT(.\Listings\buttom.lst) TABS(2) OBJECT(.\Objects\buttom.obj)
+
+line level    source
+
+   1          #include "buttom.h"
+   2          
+   3          #define  BUTTON_MS  2000
+   4          #define  BUTTON  29
+   5           u16 g_button_state[4]={0};
+   6          //放入1ms 计时  计算按钮得长短按
+   7          //最长2S 返回长按
+   8           
+   9              static u16 time_ms[1]={0};
+  10                static u16 time_ms_flag[1]={0}; //0结束  1开始计时 2短按   3---2S长按
+  11              static u16 time_lock[1]={0}; //长短按的锁-----1上锁
+  12              
+  13                uint  button_state[2]={0};
+  14              u16 i=0;  
+  15          void  button_long_short_cala(void)
+  16          {  
+  17   1      
+  18   1      
+  19   1          //开始计时
+  20   1      //    for(i=0;i<BUTTON;i++)
+  21   1      //    {
+  22   1           if(time_ms_flag[i]==1)
+  23   1           {
+  24   2                time_ms[i]++;
+  25   2           }
+  26   1           if(time_ms[i]>=BUTTON_MS) //2S 强制长按 与短按互锁
+  27   1           {
+  28   2             time_lock[i]=1;
+  29   2             g_button_state[i]=2;
+  30   2             time_ms_flag[i]=0;
+  31   2             time_ms[i]=0;           
+  32   2           } 
+  33   1      //    } 
+  34   1          //短按按下---计时使能 --清空计时
+  35   1        //  for(i=0;i<BUTTON;i++)
+  36   1        //  {
+  37   1           ReadDGUS(0x5100+i,(u8*)&button_state[0],sizeof(button_state[0]));
+  38   1           if(button_state[0]==0x5A)
+  39   1           {
+  40   2              time_ms_flag[i]=1;
+  41   2              time_ms[i]=0;
+  42   2            button_state[0]=0;
+  43   2            WriteDGUS(0x5100+i,(u8*)&button_state[0],sizeof(button_state[0]));
+  44   2           }
+  45   1        //  } 
+  46   1          //长按按下---计时结束---统计时常
+  47   1      //    for(i=0;i<BUTTON;i++)
+  48   1        //  {
+  49   1           ReadDGUS(0x5200+i,(u8*)&button_state[0],sizeof(button_state[0]));
+  50   1           if(button_state[0]==0x5A)
+  51   1           {     
+  52   2            if(time_lock[i]==0) //长按没有触发短按---
+  53   2            {
+  54   3              g_button_state[i]=1;
+C51 COMPILER V9.60.0.0   BUTTOM                                                            02/20/2023 19:49:22 PAGE 2   
+
+  55   3            }    
+  56   2              time_ms_flag[i]=0;
+  57   2            time_ms[i]=0;   
+  58   2            time_lock[i]=0; //解锁
+  59   2            button_state[0]=0;
+  60   2            WriteDGUS(0x5200+i,(u8*)&button_state[0],sizeof(button_state[0]));
+  61   2           }
+  62   1        //  }
+  63   1          
+  64   1      }
+  65          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    449    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     20    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,101 @@
+C51 COMPILER V9.59.0.0   TIMER                                                             04/23/2025 19:11:05 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIMER
+OBJECT MODULE PLACED IN .\Objects\timer.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\timer.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sourc
+                    -es;.\APP;.\PAGE) DEBUG PRINT(.\Listings\timer.lst) TABS(2) OBJECT(.\Objects\timer.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * 文 件 名   : timer.c
+   3          * 版 本 号   : V1.0
+   4          * 作    者   : pinot
+   5          * 生成日期   : 2019年11月18日
+   6          * 功能描述   : 定时器应用
+   7          * 修改历史   :
+   8          * 日    期   :
+   9          * 作    者   :
+  10          * 修改内容   :
+  11          ******************************************************************************/
+  12          
+  13          /*****************************************************************************
+  14          自定义头文件*/
+  15          #include "timer.h"
+  16          #include "i2c.h"
+  17          /*****************************************************************************
+  18          全局变量*/
+  19          
+  20          /*****************************************************************************
+  21          定时器0*/
+  22          void T0_Init(void)
+  23          {
+  24   1        TMOD|=0x01;
+  25   1        TH0=T1MS>>8;        //1ms定时器
+  26   1        TL0=T1MS;
+  27   1        ET0=1;              //开启定时器0中断
+  28   1        TR0=1;              //开启定时器
+  29   1      }
+  30          void T0_ISR_PC(void)    interrupt 1
+  31          {
+  32   1        EA=0;
+  33   1        TH0=T1MS>>8;
+  34   1        TL0=T1MS;
+  35   1        
+  36   1        
+  37   1        SysTick_RTC++;    //500ms
+  38   1        
+  39   1        
+  40   1       // WDT_RST();
+  41   1        EA=1;
+  42   1      }
+  43          
+  44          #if 1
+  45          /*****************************************************************************
+  46          定时器2*/
+  47          void T2_Init(void)
+  48          {
+  49   1        T2CON=0x70;
+  50   1        TH2=0x00;
+  51   1        TL2=0x00;
+  52   1        TRL2H=0xBC;
+  53   1        TRL2L=0xCD;        //1ms的定时器
+  54   1        IEN0|=0x20;        //开启定时器2
+C51 COMPILER V9.59.0.0   TIMER                                                             04/23/2025 19:11:05 PAGE 2   
+
+  55   1        TR2=0x01;
+  56   1      }
+  57          void T2_ISR_PC(void)    interrupt 5
+  58          {
+  59   1        TF2=0;    
+  60   1      //  WDT_RST();
+  61   1      }
+  62          
+  63          #endif
+  64          /*****************************************************************************
+  65          定时器总配置*/
+  66          void InitTimer(void)
+  67          {
+  68   1        T0_Init();
+  69   1        T2_Init();
+  70   1      }
+  71          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     86    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
