@@ -16,7 +16,7 @@ extern float Square;			//面积 单位：M^2
 extern float D;					//直径 单位：M
 extern float Volume;					//气溶胶体积 单位：M^3
 
-extern float change_P_uW_doing;	
+extern double change_P_uW_doing;	
 
 extern float L_M;
 
@@ -27,4 +27,8 @@ extern u32 time_100ms;
 extern float mJ_doing;	//已照射的mj
 
 extern void QRJ_ZX__QY_RUN();
+
+extern u16 baifenbi_T;
+
+extern u32 time_doing;
 #endif

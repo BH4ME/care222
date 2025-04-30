@@ -5,6 +5,7 @@
 double TIME_static=0.0;
 void QRJ_mm_to_s(u16 L_T);
 
+u16 icon[4]={0x00,0x01,0x02,0x03};
 
 u8 current_st;
 //初始化0x00，第一次进入界面0x01，就绪态0x02（第一次进入界面只运行一次后，未执行任务），运行态0x03开始，
@@ -16,23 +17,34 @@ u8 current_st;
 进行任务中（处于开始或暂停状态，任务完成仍为开始状态）QRJ_run 但只有按键按的时候才执行
 ******************************************************/
 
+void QRJ_done()	//正常照射完成
+{
+	WriteDGUS(0x3010,(uint8_t *)&icon[0],sizeof(icon[0]));	//图标 变开始
+}
 
 
 void QRJ_run()	//按下操作 正在照射		
 {
 	QRJ_ZX__QY_RUN();
-
-}
-
-void QRJ_done()	//正常照射完成
-{
+	
+	
+	//触发 照射完成
+	if(mJ_doing*1000 >= qirongjiao_j  ||  TIME_static<=0  ||  baifenbi_T >=100)
+	{
+		
+	
+		
+		current_st = 0x05;	//状态位设置为 自然完成	
+	}
 	
 }
+
+
 
 void QRJ_Init()		//开机初始化
 {
 	current_st = 0x00;
-	
+	WriteDGUS(0x3010,(uint8_t *)&icon[0],sizeof(icon[0]));
 }
 
 
@@ -44,9 +56,20 @@ void 	QRJ_Set()				//每次进入页面初始化
 
 }
 
+
 void 	QRJ_Reset()				//按下复位键 只进行一次 
 {
-
+	
+	mJ_doing = 0;	//总照射能量 
+	WriteDGUS(0x2700,(uint8_t *)&mJ_doing,sizeof(mJ_doing));		/***辐射量mj***/
+	
+	baifenbi_T = 0;	//完成百分比为0
+	WriteDGUS(0x2830,(uint8_t *)&(baifenbi_T),sizeof(baifenbi_T));		
+	
+	time_doing=0;	//已进行 的时间置为0
+	
+	WriteDGUS(0x3010,(uint8_t *)&icon[0],sizeof(icon[0]));	//图标 变开始
+	
 }
 	
 //		L_int   mm
@@ -140,7 +163,7 @@ void QRJ_mm_to_s(u16 L_T)
 	{
 		case 1:
 		{
-			TIME_static=(qirongjiao_j - mJ_doing*1000)	/ change_P_uW_doing / 10.0;
+			TIME_static=(qirongjiao_j - mJ_doing*1000)	/ (change_P_uW_doing) ;
 			break;
 		}
 
@@ -161,10 +184,15 @@ void QRJ_mm_to_s(u16 L_T)
 }
 
 
+
+
+
 void QRJ_stop()
 {
 	
 }
+
+
 
 
 
@@ -223,9 +251,9 @@ void QRJ_Home()	//循环运行
 		}
 				case 6:		//运行态复位 只进行一次 然后跳转到第一次初始化
 		{
-			current_st = 0x01;	// 置位 到第一次初始化
+
 			QRJ_Reset();	//只运行一次
-			
+			current_st = 0x01;	// 置位 到第一次初始化		
 			break;
 		}
 		
