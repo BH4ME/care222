@@ -12,4 +12,6 @@ extern void QRJ_Home();
 extern void QRJ_mm_to_s(u16 L_T);	
 
 extern double TIME_static;
+
+extern float qirongjiao_j;
 #endif

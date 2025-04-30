@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   UART                                                              04/28/2025 19:11:39 PAGE 1   
+C51 COMPILER V9.59.0.0   UART                                                              04/29/2025 17:34:33 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE UART
@@ -62,7 +62,7 @@ line level    source
   52   1        ES0        = 1;
   53   1      }
   54          /*****************************************************************************
-C51 COMPILER V9.59.0.0   UART                                                              04/28/2025 19:11:39 PAGE 2   
+C51 COMPILER V9.59.0.0   UART                                                              04/29/2025 17:34:33 PAGE 2   
 
   55          串口2发送字节*/
   56          void Uart2SendByte(uint8_t dat)
@@ -126,7 +126,7 @@ line level    source
  114   1        SCON1      = 0xD0;
  115   1        SREL1H     = 0x03;        /*1024-FOSC/(32*波特率)*/
  116   1        SREL1L     = 0xC8;
-C51 COMPILER V9.59.0.0   UART                                                              04/28/2025 19:11:39 PAGE 3   
+C51 COMPILER V9.59.0.0   UART                                                              04/29/2025 17:34:33 PAGE 3   
 
  117   1        IEN2       = 0x01;
  118   1      }
@@ -190,7 +190,7 @@ line level    source
  176   1        uart4_rx_count=0;
  177   1        SCON2T     = 0x80;        /*开启UART4发送*/
  178   1        SCON2R     = 0x80;        /*开启UART4接收*/
-C51 COMPILER V9.59.0.0   UART                                                              04/28/2025 19:11:39 PAGE 4   
+C51 COMPILER V9.59.0.0   UART                                                              04/29/2025 17:34:33 PAGE 4   
 
  179   1        BODE2_DIV_H= 0x00;        /*FCLK/(8*DIV)*/
  180   1        BODE2_DIV_L= 0xe0;
@@ -254,7 +254,7 @@ line level    source
  238          void Uart5Init(void)
  239          {
  240   1        uart5_rx_count=0;
-C51 COMPILER V9.59.0.0   UART                                                              04/28/2025 19:11:39 PAGE 5   
+C51 COMPILER V9.59.0.0   UART                                                              04/29/2025 17:34:33 PAGE 5   
 
  241   1        SCON3T     = 0x80;        /*开启UART4发送*/
  242   1        SCON3R     = 0x80;        /*开启UART4接收*/
@@ -318,7 +318,7 @@ line level    source
  300   3          }
  301   2        }
  302   1        
-C51 COMPILER V9.59.0.0   UART                                                              04/28/2025 19:11:39 PAGE 6   
+C51 COMPILER V9.59.0.0   UART                                                              04/29/2025 17:34:33 PAGE 6   
 
  303   1        
  304   1        //WDT_RST();

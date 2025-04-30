@@ -155,8 +155,8 @@ void ReadCurrentPage_run()
 距离 换算 为功率大小
 形参为毫米
 *******************************************************/
-double change_P_uW=0.0;	//lg change_P_uW_doing
-float change_P_uW_doing=0.0;	//根据距离在推出的功率
+//double change_P_uW=0.0;	//lg change_P_uW_doing
+double change_P_uW_doing=0.0;	//根据距离在推出的功率
 //double change_P_mW_First=0.0;
 
 void L_mm_TO_P_uw(u16 L_mm_TO_P,u8 current_page)		//形式参数毫米
@@ -229,9 +229,14 @@ void L_mm_TO_P_uw(u16 L_mm_TO_P,u8 current_page)		//形式参数毫米
 }
 
 
+
+
+u16 baifenbi_T=0;
 //距离、功率、体积、直径、面积
 void Prepare_qrj_zx_qy()	//一直运行的 无论哪个状态适用与前三个模式
 {
+
+	
 			L_mm_TO_P_uw(L_int,CurrentPageNum[1]);	//根据距离得到功率 
 			WriteDGUS(0x2600,(uint8_t *)&change_P_uW_doing,sizeof(change_P_uW_doing));		/*********功率****************/
 			L_M	=	(float)(L_int/1000.00f);	//m数据/*********距离****************/
@@ -243,6 +248,8 @@ void Prepare_qrj_zx_qy()	//一直运行的 无论哪个状态适用与前三个模式
 			Square	=	(float)(pow(L_m_D_V_S*Tanx,2)*pai);	
 			Volume	=	Square*L_m_D_V_S/3.00;
 			WriteDGUS(0x2850,(uint8_t *)&(Volume),sizeof(Volume));	//气溶胶为体积
+		
+				//	baifenbi_T = ((mJ_doing*1000.00) / qirongjiao_j ) ;
 	}
 	else if(CurrentPageNum[1]==Page_zhongxin)
 	{
@@ -252,6 +259,8 @@ void Prepare_qrj_zx_qy()	//一直运行的 无论哪个状态适用与前三个模式
 			Square	=	(float)(pow(L_m_D_V_S*Tan_zhongxin,2)*pai);	
 			
 			WriteDGUS(0x2850,(uint8_t *)&(Square),sizeof(Square));//面积	
+		
+			//				baifenbi_T = ((mJ_doing*1000.00) / qirongjiao_j ) ;
 	}
 	else if(CurrentPageNum[1]==Page_quyu)
 	{
@@ -260,12 +269,16 @@ void Prepare_qrj_zx_qy()	//一直运行的 无论哪个状态适用与前三个模式
 			Square	=	(float)(pow(L_m_D_V_S*Tanx,2)*pai);	
 			
 			WriteDGUS(0x2850,(uint8_t *)&(Square),sizeof(Square));//面积	
+		
+						//	baifenbi_T = ((mJ_doing*1000.00) / qirongjiao_j ) ;
 	}
 	
 			WriteDGUS(0x2500, (uint8_t *)&L_M,sizeof(L_M));	
 			WriteDGUS(0x2840,(uint8_t *)&(D),sizeof(D));			//直径
 	
 	
+
+			//WriteDGUS(0x2830,(uint8_t *)&(baifenbi_T),sizeof(baifenbi_T));		//百分比
 }
 
 
@@ -280,16 +293,17 @@ void QRJ_ZX__QY_RUN()						//放在QRJ_run
 	u16 ResTime_sec;
   u16 ResTime_min;	
 	
-	if(time_100ms%100==0)	//100ms
+	if(time_100ms%100==0 && time_100ms!=0)	//100ms
 	{
 		
-		mJ_doing=mJ_doing+(change_P_uW_doing/1000.00f)*0.1;	//每0.1秒累加当前的mj辐射量
+		mJ_doing=mJ_doing+(change_P_uW_doing/10000);	//每0.1秒累加当前的mj辐射量
 		if(time_100ms>=1000)	//1s
 		{
+	//		mJ_doing=mJ_doing+(change_P_uW_doing/1000);
 			time_100ms=0;
 			time_doing++; //工作时长
 			
-			TIME_static--;
+			//TIME_static--;
 	
 		
 
@@ -297,22 +311,26 @@ void QRJ_ZX__QY_RUN()						//放在QRJ_run
 		
 	  QRJ_mm_to_s(L_int);	//根据距离和功率得到时间
 	
-		ResTime_min=(u16)(TIME_static)/16;
-		ResTime_sec=(u16)(TIME_static)%16;
+		ResTime_min=(u16)(TIME_static)/60;
+		ResTime_sec=(u16)(TIME_static)%60;
 
 		WriteDGUS(0x2800,(uint8_t *)&ResTime_min,sizeof(ResTime_min));		/***剩余时间*分钟****/
 		WriteDGUS(0x2805,(uint8_t *)&ResTime_sec,sizeof(ResTime_sec));		/***剩余时间*秒****/
+		
 		//总时间 等于剩余时间加上已经工作的时间
-		ResTime_min=(u16)(TIME_static+time_doing)/16;
-		ResTime_sec=(u16)(TIME_static+time_doing)%16;
+		ResTime_min=(u16)(TIME_static+time_doing)/60;
+		ResTime_sec=(u16)(TIME_static+time_doing)%60;
 		WriteDGUS(0x2825,(uint8_t *)&ResTime_sec,sizeof(ResTime_sec));		/***总时间*秒****/
 		WriteDGUS(0x2820,(uint8_t *)&ResTime_min,sizeof(ResTime_min));		/***总时间*分钟****/
+		
+		
+		
 		
 		WriteDGUS(0x2700,(uint8_t *)&mJ_doing,sizeof(mJ_doing));		/***辐射量mj***/
 	}
 	
-	
-	
-	
+
+		baifenbi_T = ((mJ_doing*1000.00*100) / qirongjiao_j ) ;
+		WriteDGUS(0x2830,(uint8_t *)&(baifenbi_T),sizeof(baifenbi_T));		//百分比
 	
 }
