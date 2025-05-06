@@ -1,0 +1,121 @@
+C51 COMPILER V9.59.0.0   TIMER                                                             05/06/2025 18:30:28 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIMER
+OBJECT MODULE PLACED IN .\Objects\timer.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\timer.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sourc
+                    -es;.\APP;.\PAGE) DEBUG PRINT(.\Listings\timer.lst) TABS(2) OBJECT(.\Objects\timer.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * 文 件 名   : timer.c
+   3          * 版 本 号   : V1.0
+   4          * 作    者   : pinot
+   5          * 生成日期   : 2019年11月18日
+   6          * 功能描述   : 定时器应用
+   7          * 修改历史   :
+   8          * 日    期   :
+   9          * 作    者   :
+  10          * 修改内容   :
+  11          ******************************************************************************/
+  12          
+  13          /*****************************************************************************
+  14          自定义头文件*/
+  15          #include "timer.h"
+  16          #include "i2c.h"
+  17          
+  18          #include "home.h"
+  19          #include "start_win.h"
+  20          /*****************************************************************************
+  21          全局变量*/
+  22          
+  23          /*****************************************************************************
+  24          定时器0*/
+  25          void T0_Init(void)
+  26          {
+  27   1        TMOD|=0x01;
+  28   1        TH0=T1MS>>8;        //1ms定时器
+  29   1        TL0=T1MS;
+  30   1        ET0=1;              //开启定时器0中断
+  31   1        TR0=1;              //开启定时器
+  32   1      }
+  33          
+  34          u32 i=0;
+  35          //u32 J=0;
+  36          void T0_ISR_PC(void)    interrupt 1
+  37          {
+  38   1        EA=0;
+  39   1        TH0=T1MS>>8;
+  40   1        TL0=T1MS;
+  41   1      //    J++;
+  42   1      //  if( J>=1500 )
+  43   1      //  {
+  44   1      //    UV=~UV;
+  45   1      //      J=0;
+  46   1      //  }
+  47   1        
+  48   1        SysTick_RTC++;    //500ms
+  49   1        i++;
+  50   1        if(i>=100)
+  51   1        {
+  52   2          X_calculate_1s++;
+  53   2          time_100ms++;
+  54   2          i=0;
+C51 COMPILER V9.59.0.0   TIMER                                                             05/06/2025 18:30:28 PAGE 2   
+
+  55   2        }
+  56   1      //  time_100ms++;   //1s
+  57   1        
+  58   1       // WDT_RST();
+  59   1        EA=1;
+  60   1      }
+  61          
+  62          #if 1
+  63          /*****************************************************************************
+  64          定时器2*/
+  65          void T2_Init(void)
+  66          {
+  67   1        T2CON=0x70;
+  68   1        TH2=0x00;
+  69   1        TL2=0x00;
+  70   1        TRL2H=0xBC;
+  71   1        TRL2L=0xCD;        //1ms的定时器
+  72   1        IEN0|=0x20;        //开启定时器2
+  73   1        TR2=0x01;
+  74   1      }
+  75          void T2_ISR_PC(void)    interrupt 5
+  76          {
+  77   1        TF2=0;   
+  78   1      
+  79   1      
+  80   1      //  WDT_RST();
+  81   1      }
+  82          
+  83          #endif
+  84          /*****************************************************************************
+  85          定时器总配置*/
+  86          void InitTimer(void)
+  87          {
+  88   1        T0_Init();
+  89   1        T2_Init();
+  90   1      }
+  91          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    241    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      4    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
