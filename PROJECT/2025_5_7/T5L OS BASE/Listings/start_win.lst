@@ -1,0 +1,612 @@
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE START_WIN
+OBJECT MODULE PLACED IN .\Objects\start_win.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE APP\start_win.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sourc
+                    -es;.\APP;.\PAGE) DEBUG PRINT(.\Listings\start_win.lst) TABS(2) OBJECT(.\Objects\start_win.obj)
+
+line level    source
+
+   1          #include "start_win.h"
+   2          #include <math.h>
+   3          #include "qrj.h"
+   4          #include "home.h"
+   5          #include "uart.h"
+   6          u8 STATE_FIRST_FLAG;  //复位置于0
+   7          
+   8          
+   9          //状态机
+  10          typedef enum {
+  11              STATE_IDLE,
+  12              STATE_INIT,
+  13              STATE_FIRST_RUNNING,
+  14              STATE_RUNNING,
+  15              STATE_RUNNING_FINISH,
+  16              STATE_PAUSED,
+  17              STATE_RESET,
+  18              STATE_ERROR
+  19          } SystemState;
+  20          
+  21          SystemState current_state = STATE_INIT;
+  22          
+  23          
+  24          
+  25          typedef struct {
+  26              u16 x;  // X坐标 (0-65535)
+  27              u16 y;  // Y坐标 (0-65535) 
+  28          } DgusPoint;
+  29          
+  30          DgusPoint point_get;
+  31          
+  32          
+  33          
+  34          typedef struct {
+  35              u16  cmd_type_line;     //  (0x00)    // (固定0x02)
+  36              u16  chart_num;     // 条数
+  37              u16  color;        // RGB565颜色值
+  38              DgusPoint points[2];    // 2个坐标点
+  39              u16   end_marker;   // 结束标志 (0xFF)
+  40            //  u8   reserved;     //  (0x00)
+  41          } DgusLineCommand;
+  42          
+  43          
+  44          
+  45          typedef struct {
+  46              DgusPoint points;    // 坐标点
+  47              u16   end_marker;   // 结束标志 (0xFF)
+  48            //  u8   reserved;     //  (0x00)
+  49          } Dguspoint_update;
+  50          
+  51          
+  52          Dguspoint_update point_update;
+  53          
+  54          static  DgusLineCommand Line[2];  //初始化两个图像表
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 2   
+
+  55          
+  56          
+  57          //初始化
+  58          void start_win_Init() //初始化只运行一次
+  59          {
+  60   1      
+  61   1        Line[0].cmd_type_line = 0X0002;
+  62   1        Line[0].end_marker = 0xff00;
+  63   1        Line[0].chart_num = 0x0001;
+  64   1        
+  65   1        Line[1].cmd_type_line = 0X0002;
+  66   1        Line[1].end_marker = 0xff00;
+  67   1        Line[1].chart_num = 0x0001;
+  68   1        
+  69   1        point_update.end_marker= 0xff00;
+  70   1      }
+  71          
+  72          
+  73          
+  74          //获取Y的坐标
+  75          u16 Y_log_calculate(double P_uW)  //根据功率大小计算Y值的大小（纵坐标）
+  76          {
+  77   1        
+  78   1        static double P_log_uW; //log 0.11x~3.22x
+  79   1        P_log_uW=log10(P_uW); //P_uW 1.3~1666
+  80   1        /*******************************计算Y坐标结果值为像素**********************************/
+  81   1      
+  82   1        if(P_log_uW>=0) // 0.11x~3.22x 量化到[0,120]
+  83   1        {
+  84   2          
+  85   2          return tubiao_zuoxia_y - (((double)(P_log_uW - 0.11f))/3.11f)*120;
+  86   2        }
+  87   1        else
+  88   1          return tubiao_zuoxia_y;
+  89   1      }
+  90          
+  91          
+  92          //获取X的坐标
+  93          u16 X_calculate_1s=0;//定时器中
+  94          static u8 num_dian = 0; //已经写入点的数量 复位要将其设为0
+  95          u16 X_calculate()   //正常是返回X地址，错误代码0x0000/0xffff/0xfffe
+  96          {
+  97   1        static u8 wait_1s = 0;  
+  98   1        static u8 doing_1s = 0;
+  99   1        static u16 last_y=0;
+ 100   1        if(X_calculate_1s>=10)  //1s
+ 101   1        {
+ 102   2          //Uart4SendByte();
+ 103   2          //printf("1s\n");
+ 104   2          doing_1s++;
+ 105   2          X_calculate_1s=0;
+ 106   2          if(num_dian==0) //first第一次写入点位置是固定好的
+ 107   2          {
+ 108   3            
+ 109   3            num_dian++;
+ 110   3            last_y = tubiao_zuoshang_x;
+ 111   3          //  printf("num_dian:%d\n",num_dian);
+ 112   3            return tubiao_zuoshang_x;
+ 113   3          }
+ 114   2      //    else if(TIME_static>=tubiao_chang-last_y+10)//大于580
+ 115   2      //    {
+ 116   2      //      //限制了最大290个点
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 3   
+
+ 117   2      //      wait_1s = TIME_static/(tubiao_chang-last_y+10)+1 ;
+ 118   2      //      if(doing_1s >= wait_1s)
+ 119   2      //      {
+ 120   2      //        doing_1s=0;
+ 121   2      //        num_dian++;
+ 122   2      //        last_y = last_y+0x02;
+ 123   2      //          if(last_y>tubiao_zuoshang_y || last_y<tubiao_zuoxia_y)
+ 124   2      //          {
+ 125   2      //            return 0xfffe;
+ 126   2      //          }
+ 127   2      //        return last_y;
+ 128   2      //      }
+ 129   2      //    }
+ 130   2      //    else if(TIME_static<=tubiao_chang-last_y+10 && TIME_static>=(tubiao_chang-last_y+10)/2)//290~580
+ 131   2      //    {
+ 132   2      //      wait_1s = 2;
+ 133   2      //      if(doing_1s >= wait_1s)
+ 134   2      //      {
+ 135   2      //        doing_1s=0;
+ 136   2      //        num_dian++;
+ 137   2      //        last_y = last_y+0x02;
+ 138   2      //          if(last_y>tubiao_zuoshang_y || last_y<tubiao_zuoxia_y)
+ 139   2      //          {
+ 140   2      //            return 0xfffe;
+ 141   2      //          }
+ 142   2      //        return last_y;
+ 143   2      //      }
+ 144   2          else if(TIME_static>=tubiao_chang-last_y+10)//大于580
+ 145   2          {
+ 146   3            //限制了最大290个点
+ 147   3            wait_1s = TIME_static/(tubiao_chang-last_y+10)+1 ;
+ 148   3            if(doing_1s >= wait_1s)
+ 149   3            {
+ 150   4              doing_1s=0;
+ 151   4              num_dian++;   
+ 152   4      
+ 153   4          //    printf("num_dian:%d\n",num_dian);
+ 154   4              last_y = last_y+0x02;
+ 155   4                if(last_y>tubiao_zuoshang_y || last_y<tubiao_zuoxia_y)
+ 156   4                {
+ 157   5                  return 0xfffe;
+ 158   5                }
+ 159   4              return last_y;
+ 160   4            }
+ 161   3          }
+ 162   2          else if(TIME_static<=tubiao_chang-last_y+10 && TIME_static>=(tubiao_chang-last_y+10)/2)//290~580
+ 163   2          {
+ 164   3            wait_1s = 2;
+ 165   3            if(doing_1s >= wait_1s)
+ 166   3            {
+ 167   4              doing_1s=0;
+ 168   4              num_dian++;     
+ 169   4              
+ 170   4        //      printf("num_dian:%d\n",num_dian);
+ 171   4              last_y = last_y+0x02;
+ 172   4              return last_y;
+ 173   4            }
+ 174   3            return 0;
+ 175   3          }else if(TIME_static<=(tubiao_chang-last_y+10)/2)//<290 
+ 176   2          {
+ 177   3              wait_1s = (tubiao_chang-last_y+10)/TIME_static;
+ 178   3              doing_1s=0;
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 4   
+
+ 179   3              num_dian++;
+ 180   3              last_y = last_y+wait_1s;
+ 181   3        
+ 182   3          //  printf("num_dian:%d\n",num_dian);
+ 183   3                if(last_y>tubiao_zuoshang_y || last_y<tubiao_zuoxia_y)  //超出量程范围则认为有问题
+ 184   3                {
+ 185   4                  return 0xfffe;
+ 186   4                }
+ 187   3        
+ 188   3              return last_y;
+ 189   3          }
+ 190   2          return 0;
+ 191   2        }
+ 192   1      
+ 193   1        
+ 194   1        if(num_dian>num_maxdian)  //如果点数大于最大值290则认为有问腿
+ 195   1        {
+ 196   2          return 0xffff;
+ 197   2        }
+ 198   1            return 0;
+ 199   1      }
+ 200          
+ 201          
+ 202          
+ 203          //逻辑上根据时间去判断是否需要取样，再进行对y轴的取样工作
+ 204          //获得X Y的坐标
+ 205          
+ 206          
+ 207          u8 get_X_Y(DgusPoint *point)
+ 208          {
+ 209   1        point->x=X_calculate();
+ 210   1        if(point->x != 0 || point->x != 0xffff || point->x != 0xfffe )  //排除三个error
+ 211   1        {
+ 212   2          //x坐标获取正常 则获取Y的坐标
+ 213   2          point->y =   Y_log_calculate(change_P_uW_doing);
+ 214   2          return 1;
+ 215   2        }
+ 216   1        return 0;
+ 217   1      }
+ 218          
+ 219          
+ 220          //  chart[0]=(u8)(chart_num_2>>8);
+ 221          //  chart[1]=(u8)(chart_num_2&0xff);
+ 222          //先写入两个点之后，每次只更新一个点
+ 223          
+ 224          u16 Adress_line_1 = 0xb005; //CHART_1_ADDR + 0x07    复位后要置0xb005
+ 225          u16 Adress_line_2 = 0x5505; //CHART_2_ADDR + 0x07
+ 226          
+ 227          void update_point( DgusPoint *point,u8 line_num)
+ 228          {
+ 229   1        u8 chart_numline[2]={0};
+ 230   1        switch(line_num)
+ 231   1        {
+ 232   2          case 1: //曲线1
+ 233   2          {
+ 234   3            
+ 235   3            if(get_X_Y(point))  //获取XY坐标成功返回1
+ 236   3            {
+ 237   4              chart_numline[0]=(u8)((num_dian)>>8);
+ 238   4              chart_numline[1]=(u8)((num_dian)&0xff);     //多少条曲线，取决于点数，条数等于点数-1
+ 239   4              point_update.points.x = point->x;
+ 240   4              point_update.points.y = point->y;   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 5   
+
+ 241   4              WriteDGUS(CHART_1_ADDR+0X01,(uint8_t *)&chart_numline,sizeof(chart_numline));     //多少条线
+ 242   4              WriteDGUS(Adress_line_1,(uint8_t *)&point_update,sizeof(point_update));
+ 243   4              //num_dian
+ 244   4              Adress_line_1 += 0x2; 
+ 245   4              
+ 246   4              
+ 247   4            }
+ 248   3            break;
+ 249   3          }
+ 250   2          case 2:
+ 251   2          {
+ 252   3            
+ 253   3            break;
+ 254   3          }
+ 255   2          
+ 256   2          default :
+ 257   2          {
+ 258   3            
+ 259   3            break;
+ 260   3          }
+ 261   2        }
+ 262   1      
+ 263   1      } 
+ 264          
+ 265          
+ 266          void CHART_RUNNING()
+ 267          {
+ 268   1        
+ 269   1        update_point(&point_get,1); //调用曲线1，每次写入一个点和截断代码和条数+1
+ 270   1        
+ 271   1      }
+ 272          
+ 273          
+ 274          //参考图像
+ 275          void CHART_FIRST__RUNNING_CANKAO(u8 num_lines_cankao)   //默认第二条曲线为参考曲线
+ 276          {
+ 277   1          
+ 278   1        
+ 279   1          Line[num_lines_cankao-1].chart_num = 1;//条数等于1
+ 280   1          
+ 281   1          Line[num_lines_cankao-1].color = COLOUR_WHITE;
+ 282   1          
+ 283   1          Line[num_lines_cankao-1].points[0].x = tubiao_zuoxia_x + 0x01;
+ 284   1          Line[num_lines_cankao-1].points[0].y = Y_log_calculate(change_P_uW_doing);
+ 285   1        
+ 286   1          Line[num_lines_cankao-1].points[1].x = tubiao_zuoxia_x + tubiao_chang;
+ 287   1          Line[num_lines_cankao-1].points[1].y = Line[num_lines_cankao-1].points[0].y;
+ 288   1        if(num_lines_cankao == 2)
+ 289   1        {
+ 290   2          WriteDGUS(CHART_2_ADDR,(uint8_t *)&Line[num_lines_cankao-1],sizeof(Line[num_lines_cankao-1]));
+ 291   2        }
+ 292   1        
+ 293   1      }
+ 294          
+ 295          //第一次运行 先只写入一个点
+ 296          void CHART_FIRST_RUNNING(DgusPoint *point,u8 line_num)
+ 297          { 
+ 298   1        //CHART_FIRST__RUNNING_CANKAO(2);     //参考曲线运行一次
+ 299   1              if(get_X_Y(point))  //获取XY坐标成功返回1
+ 300   1            {
+ 301   2              
+ 302   2              CHART_FIRST__RUNNING_CANKAO(2);     //参考曲线运行一次
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 6   
+
+ 303   2                printf("初始化\n");
+ 304   2              
+ 305   2              if(line_num==1)
+ 306   2              {
+ 307   3                Line[0].chart_num = 0;//条数等于0
+ 308   3                
+ 309   3                Line[0].color = COLOUR_DEEP_RED;
+ 310   3                Line[0].points[0].x = tubiao_zuoxia_x + 0x01;
+ 311   3            //    Line[0].points[0].x = point->x; tubiao_zuoxia_x + 0x01;
+ 312   3                Line[0].points[0].y = point->y;
+ 313   3                
+ 314   3              
+ 315   3                printf("初始化\n");
+ 316   3                
+ 317   3                
+ 318   3                WriteDGUS(CHART_1_ADDR,(uint8_t *)&Line[0],sizeof(Line[0]));
+ 319   3              //num_dian
+ 320   3              //Adress_line_1 += 0x2; 
+ 321   3              }
+ 322   2      //        else if(line_num==2)
+ 323   2      //        {
+ 324   2      //          
+ 325   2      //          Line[1].chart_num = 0;//条数等于0
+ 326   2      //          
+ 327   2      //          Line[1].color = 0xffff;
+ 328   2      //          
+ 329   2      //          Line[1].points[0].x = point->x;
+ 330   2      //          Line[1].points[0].y = point->y;
+ 331   2      //          WriteDGUS(CHART_2_ADDR,(uint8_t *)&point,sizeof(point));
+ 332   2      //        //num_dian  
+ 333   2      //        }
+ 334   2              
+ 335   2              
+ 336   2              
+ 337   2              
+ 338   2              STATE_FIRST_FLAG = 1; //第一次运行完成，下次进入正常运行状态
+ 339   2            }
+ 340   1      }
+ 341          
+ 342          
+ 343          
+ 344          void CHART_RESET(u8 num_lines)  //1,2曲线1，2，如果输入0则全部曲线重置
+ 345          {
+ 346   1        u16 Reset[8]={0};
+ 347   1        switch(num_lines)
+ 348   1        {
+ 349   2          case 0:
+ 350   2          {
+ 351   3            WriteDGUS(CHART_1_ADDR,(uint8_t *)&Reset,sizeof(Reset));
+ 352   3            WriteDGUS(CHART_2_ADDR,(uint8_t *)&Reset,sizeof(Reset));
+ 353   3            break;
+ 354   3          }
+ 355   2          
+ 356   2          case 1:
+ 357   2          {
+ 358   3            WriteDGUS(CHART_1_ADDR,(uint8_t *)&Reset,sizeof(Reset));    
+ 359   3            break;
+ 360   3          }
+ 361   2          
+ 362   2          
+ 363   2          case 2:
+ 364   2          {
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 7   
+
+ 365   3            WriteDGUS(CHART_2_ADDR,(uint8_t *)&Reset,sizeof(Reset));
+ 366   3            break;
+ 367   3          }
+ 368   2          
+ 369   2          default :
+ 370   2          {
+ 371   3            
+ 372   3            break;
+ 373   3          }
+ 374   2        }
+ 375   1        
+ 376   1        
+ 377   1      }
+ 378          //状态转换与之前的状态机进行状态转换，方便兼容和后期移植
+ 379          /**********************************************
+ 380          u8 current_st;
+ 381          初始化0x00，第一次进入界面0x01，就绪态0x02（第一次进入界面只运行一次后，未执行任务），运行态0x03开始，
+ 382          运行态暂停0x04，运行态结束0x05,复位0x06
+ 383          
+ 384          *************************************************/
+ 385          u8 STATE_FIRST_FLAG=0;  //复位置于0
+ 386          void switch_state()
+ 387          {
+ 388   1          switch(current_st)
+ 389   1        {
+ 390   2      
+ 391   2          case 2: 
+ 392   2          {
+ 393   3            
+ 394   3            break;
+ 395   3          }
+ 396   2          case 3:
+ 397   2          {
+ 398   3            if(STATE_FIRST_FLAG)  //1
+ 399   3            {
+ 400   4              current_state = STATE_RUNNING;
+ 401   4            }
+ 402   3            else
+ 403   3            {
+ 404   4              current_state = STATE_FIRST_RUNNING;
+ 405   4            }
+ 406   3      
+ 407   3            break;
+ 408   3          }
+ 409   2          
+ 410   2            case 4: 
+ 411   2          {
+ 412   3            current_state = STATE_PAUSED;
+ 413   3            break;
+ 414   3          }
+ 415   2          case 5:
+ 416   2          {
+ 417   3            STATE_FIRST_FLAG = 0;
+ 418   3            current_state = STATE_RUNNING_FINISH;
+ 419   3            break;
+ 420   3          }
+ 421   2          case 6:
+ 422   2          {
+ 423   3            
+ 424   3              current_state = STATE_RESET;
+ 425   3            break;
+ 426   3          }
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 8   
+
+ 427   2          default :
+ 428   2          {
+ 429   3            
+ 430   3            break;
+ 431   3          }
+ 432   2        }
+ 433   1        
+ 434   1          
+ 435   1      }
+ 436          
+ 437          
+ 438          
+ 439          
+ 440          
+ 441          void Draw_chart() //分第1，2条曲线
+ 442          {
+ 443   1        
+ 444   1        switch_state();     //状态转换
+ 445   1        switch(current_state)
+ 446   1        {
+ 447   2          case STATE_INIT:  
+ 448   2          {
+ 449   3            current_state = STATE_IDLE;
+ 450   3            break;
+ 451   3          }
+ 452   2          case STATE_IDLE:
+ 453   2          {
+ 454   3            
+ 455   3            break;
+ 456   3          }
+ 457   2              case STATE_FIRST_RUNNING: 
+ 458   2          {
+ 459   3            //STATE_FIRST_FLAG = 1;
+ 460   3            
+ 461   3            CHART_FIRST_RUNNING(&point_get,1);
+ 462   3            break;
+ 463   3          }
+ 464   2          case STATE_RUNNING:
+ 465   2          {
+ 466   3            //CHART_RUNNING();  //有问题
+ 467   3            break;
+ 468   3          }
+ 469   2          
+ 470   2          case STATE_RUNNING_FINISH:  //照射完成 
+ 471   2          {
+ 472   3            STATE_FIRST_FLAG = 0;
+ 473   3            current_state = STATE_IDLE;
+ 474   3            num_dian = 0; 
+ 475   3            
+ 476   3            
+ 477   3          //  CHART_RESET(0); //曲线全部重置
+ 478   3            
+ 479   3            Adress_line_1 = 0xb005; //CHART_1_ADDR + 0x07    复位后要置0xb005
+ 480   3            Adress_line_2 = 0x5505; //CHART_2_ADDR + 0x07
+ 481   3            break;
+ 482   3          }
+ 483   2            case STATE_PAUSED:  
+ 484   2          {
+ 485   3            
+ 486   3            break;
+ 487   3          }
+ 488   2          case STATE_RESET:
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 9   
+
+ 489   2          {
+ 490   3            STATE_FIRST_FLAG = 0;
+ 491   3            current_state = STATE_IDLE;
+ 492   3            num_dian = 0; 
+ 493   3            
+ 494   3            
+ 495   3            CHART_RESET(0); //曲线全部重置
+ 496   3            
+ 497   3            Adress_line_1 = 0xb005; //CHART_1_ADDR + 0x07    复位后要置0xb005
+ 498   3            Adress_line_2 = 0x5505; //CHART_2_ADDR + 0x07
+ 499   3            break;
+ 500   3          }
+ 501   2          case STATE_ERROR:
+ 502   2          {
+ 503   3            
+ 504   3            break;
+ 505   3          }
+ 506   2          default :
+ 507   2          {
+ 508   3            
+ 509   3            break;
+ 510   3          }
+ 511   2        }
+ 512   1        
+ 513   1      }
+ 514          
+ 515          //void sys_write_chart_zhexian_Two(u16 x1,u16 y1,u16 x2,u16 y2)   //输入2个点
+ 516          //{
+ 517          //  #define CHART_ADDR    0xb000  //动态曲线功能所对应的系统变量接口地址
+ 518          //  //#define CHART_NUM     0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
+ 519          //  //#define POINT_NUM     1       //一次性写入多少个数据点
+ 520          //  #define colour 0Xffff
+ 521          //  u8 chart_cmd[16] = {0x00,0x02};
+ 522          //  chart_cmd[2]=(u8)(chart_num>>8);
+ 523          //  chart_cmd[3]=(u8)(chart_num&0xff);
+ 524          //  chart_cmd[4] = (u8)(colour>>8);//曲线通道id
+ 525          //  chart_cmd[5] = (u8)(colour&0xff);//一次性写入多少个数据点
+ 526          //  chart_cmd[6] = (u8)(x1>>8);//x1
+ 527          //  chart_cmd[7] = (u8)(x1&0xff);
+ 528          //  chart_cmd[8] = (u8)(y1>>8);//y1
+ 529          //  chart_cmd[9] = (u8)(y1&0xff);
+ 530          //  chart_cmd[10] = (u8)(x2>>8);//x2
+ 531          //  chart_cmd[11] = (u8)(x2&0xff);
+ 532          //  chart_cmd[12] = (u8)(y2>>8);//y2
+ 533          //  chart_cmd[13] = (u8)(y2&0xff);
+ 534          //    chart_cmd[14] = (u8)0xff;//y2
+ 535          //  chart_cmd[15] = (u8)0x00;     //0xa007 
+ 536          ////  y1=y2;
+ 537          ////  x1=x2;
+ 538          //  Adress_Now=CHART_ADDR+0x7;chart_num++;
+ 539          //  //发送命令
+ 540          //  WriteDGUS(CHART_ADDR,chart_cmd,sizeof(chart_cmd));
+ 541          //}
+ 542          //void sys_write_chart_zhexian_Two_Cankao(u16 x1,u16 y1,u16 x2,u16 y2)    //输入2个点
+ 543          //{
+ 544          //  #define CHART_ADDR_cankao   0x5500  //动态曲线功能所对应的系统变量接口地址
+ 545          //  #define CHART_NUM_cankao      0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
+ 546          //  //#define POINT_NUM     1       //一次性写入多少个数据点
+ 547          //  #define colour_cankao 0X8410
+ 548          //  u8 chart_cmd[16] = {0x00,0x02,0x0f,CHART_NUM_cankao};
+ 549          //  chart_cmd[4] = (u8)(colour_cankao>>8);//曲线通道id
+ 550          //  chart_cmd[5] = (u8)(colour_cankao&0xff);//一次性写入多少个数据点
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 18:17:57 PAGE 10  
+
+ 551          //  chart_cmd[6] = (u8)(x1>>8);//x1
+ 552          //  chart_cmd[7] = (u8)(x1&0xff);
+ 553          //  chart_cmd[8] = (u8)(y1>>8);//y1
+ 554          //  chart_cmd[9] = (u8)(y1&0xff);
+ 555          //  chart_cmd[10] = (u8)(x2>>8);//x2
+ 556          //  chart_cmd[11] = (u8)(x2&0xff);
+ 557          //  chart_cmd[12] = (u8)(y2>>8);//y2
+ 558          //  chart_cmd[13] = (u8)(y2&0xff);
+ 559          //  chart_cmd[14] = (u8)0xff;//y2
+ 560          //  chart_cmd[15] = (u8)0x00;     //0xa007 
+ 561          ////  y1=y2;
+ 562          ////  x1=x2;
+ 563          //  //Adress_Now=0xa007;
+ 564          //  //发送命令
+ 565          //  WriteDGUS(CHART_ADDR_cankao,chart_cmd,sizeof(chart_cmd));
+ 566          //}
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1546    ----
+   CONSTANT SIZE    =     26    ----
+   XDATA SIZE       =     59      31
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
