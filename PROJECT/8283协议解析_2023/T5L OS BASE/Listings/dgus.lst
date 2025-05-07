@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 16:35:25 PAGE 1   
+C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 23:25:22 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DGUS
 OBJECT MODULE PLACED IN .\Objects\dgus.obj
-COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\dgus.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\L
-                    -istings\dgus.lst) TABS(2) OBJECT(.\Objects\dgus.obj)
+COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\dgus.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Lis
+                    -tings\dgus.lst) TABS(2) OBJECT(.\Objects\dgus.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52   2          else{         APP_DATA3=0,APP_DATA2=0,APP_DATA1=1,APP_DATA0=1;}
   53   2          APP_EN  = 1;
   54   2          while(APP_EN);
-C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 16:35:25 PAGE 2   
+C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 23:25:22 PAGE 2   
 
   55   2          if(1 == Len){ *pBuf++=DATA1;Len=Len-1; }
   56   2          else{         *pBuf++=DATA1;*pBuf++=DATA0;Len=Len-2;}
@@ -126,7 +126,7 @@ line level    source
  114   1        Aoffset = Addr&0x01;                 /*È¡bit0×÷ÎªÆæÅ¼ÅÐ¶Ï*/
  115   1        Addr  = Addr >> 1;                   /*ÅäÖÃµØÖ·*/
  116   1        ADR_H = (uint8_t)(Addr >> 16);
-C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 16:35:25 PAGE 3   
+C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 23:25:22 PAGE 3   
 
  117   1        ADR_M = (uint8_t)(Addr >> 8);
  118   1        ADR_L = (uint8_t)(Addr);
@@ -190,7 +190,7 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
    EDATA SIZE       =   ----    ----
-C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 16:35:25 PAGE 4   
+C51 COMPILER V9.59.0.0   DGUS                                                              05/07/2025 23:25:22 PAGE 4   
 
    HDATA SIZE       =   ----    ----
    XDATA CONST SIZE =   ----    ----

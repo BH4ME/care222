@@ -25,7 +25,10 @@
 //#include "mode_4.h"
 
 
-
+#define  uchar     unsigned char
+#define  uint  unsigned int 
+//#define  s16    signed int
+#define  u32  unsigned long 
 #define  u8   unsigned char  
 //#define  s8     signed char
 #define  uint  unsigned int 

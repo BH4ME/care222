@@ -1,0 +1,576 @@
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE HANDLE
+OBJECT MODULE PLACED IN .\Objects\handle.obj
+COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\handle.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Source
+                    -s;.\APP;.\PAGE) DEBUG PRINT(.\Listings\handle.lst) TABS(2) OBJECT(.\Objects\handle.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * 文 件 名   : handle.c
+   3          * 版 本 号   : V1.0
+   4          * 作    者   : pinot
+   5          * 生成日期   : 2019年11月27日
+   6          * 功能描述   : 逻辑处理
+   7          * 修改历史   :
+   8          * 日    期   :
+   9          * 作    者   :
+  10          * 修改内容   :
+  11          ******************************************************************************/
+  12          
+  13          /*****************************************************************************
+  14          自定义头文件*/
+  15          #include "handle.h"
+  16          #include  "i2c.h"
+  17          #include "home.h"
+  18          
+  19          #include "qrj.h"
+  20          /*****************************************************************************
+  21          全局变量*/
+  22          //内部RAM
+  23          uint8_t value0F00[4] = {0};
+  24          uint8_t xp_status=0;
+  25          
+  26          //外部RAM
+  27          typedef struct dlt_645_8283
+  28          {
+  29              uint8_t st_byte1;//帧起始符
+  30              uint8_t st_byte2;//帧起始符
+  31              uint8_t lenth;//长度
+  32              uint8_t func;//类型
+  33              uint8_t addr1;//地址
+  34              uint8_t addr2;//地址  
+  35              uint8_t edata[250];//数据内容
+  36          }dl_t_645_8283_body;
+  37          dl_t_645_8283_body xdata s_dl_t_645_8283_body={0};
+  38          
+  39          
+  40          
+  41          //后期函数封装方便在别的.c文件中访问结构体
+  42          u8 get_data1(void) {
+  43   1          return s_dl_t_645_8283_body.edata[1]; //低字节
+  44   1      }
+  45          
+  46          
+  47          
+  48          
+  49          #define FRAME_BUFFER_LEN 255
+  50          uint8_t xdata frame_buf[FRAME_BUFFER_LEN];//用来存取一帧数据
+  51          uint8_t xdata frame_buf1[FRAME_BUFFER_LEN]=0;//用来存取一帧数据
+  52          #define DLT_645_LEAST_LEN 7
+  53          
+  54          
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 2   
+
+  55          //代码空间
+  56          uint8_t code CUart2[] = "Uart2Init Done!!!123";
+  57          uint8_t code CUart3[] = "Uart3Init Done!!!";
+  58          uint8_t code CUart4[] = "Uart4Init Done!!!";
+  59          uint8_t code CUart5[] = "Uart5Init Done!!!";
+  60          
+  61          
+  62          //解析到一帧数据可能出现的情况
+  63          typedef enum frame_result
+  64          {
+  65              UNKNOWN,
+  66              OK,           //成功找到一帧
+  67              UNFINISHED,   //未接收完成
+  68              ERROR,        //不满足此协议
+  69          }frame_result_t;
+  70          
+  71          //定义协议类型
+  72          typedef enum protocol_type
+  73          {
+  74              PROTOCOL_UNKNOWN,
+  75              PROTOCOL_DL_T_698,
+  76              PROTOCOL_DL_T_645,
+  77              PROTOCOL_OTHER,
+  78          }protocol_type_t;
+  79          
+  80          #if 1
+  81          /*****************************************************************************
+  82          控制亮度*/
+  83          void SetBlight(uint8_t n)
+  84          {
+  85   1      //  uint8_t temp[4]={0};
+  86   1        WriteDGUS(DHW_LEDCFG,(uint8_t *)&n,sizeof(n));
+  87   1      //  do
+  88   1      //  {
+  89   1      //    DelayMs(5);
+  90   1      //    ReadDGUS(DHW_LEDNOW,temp,2);//设置亮度与获取到的亮度不一致
+  91   1      //  }while(!(temp[1]==n));
+  92   1      }
+  93          /*****************************************************************************
+  94          控制伴音*/
+  95          void SetVoice(int8_t status)
+  96          {
+  97   1        uint8_t temp[4]={0};
+  98   1        ReadDGUS(DHW_SYSCFG,temp,sizeof(temp));
+  99   1        temp[0]=0x5A;
+ 100   1        if(1==status){temp[3]&=0xF7;}
+ 101   1        else if(2==status){temp[3]|=0x08;}
+ 102   1        else{return;}
+ 103   1        WriteDGUS(DHW_SYSCFG,temp,sizeof(temp));
+ 104   1        do
+ 105   1        {
+ 106   2          DelayMs(5);
+ 107   2          ReadDGUS(DHW_SYSCFG,temp,1);
+ 108   2        }while(temp[0]!=0);
+ 109   1      }
+ 110          
+ 111          #endif
+ 112          
+ 113          
+ 114          /*****************************************************************************
+ 115          判断按键值是否有上传*/
+ 116          int8_t GetValue0F00(void)
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 3   
+
+ 117          {
+ 118   1        uint8_t cleanData[4]={0};
+ 119   1        ReadDGUS(DHW_0F00,value0F00,sizeof(value0F00));
+ 120   1        if(0x5A == value0F00[0])
+ 121   1        {
+ 122   2          WriteDGUS(DHW_0F00,cleanData,sizeof(cleanData));
+ 123   2          return 1;
+ 124   2        }
+ 125   1        return 0;
+ 126   1      }
+ 127          /*****************************************************************************
+ 128          串口初次打印*/
+ 129          void InitUartSend(void)
+ 130          {
+ 131   1        Uart2SendStr(CUart2,sizeof(CUart2));
+ 132   1      //  Uart3SendStr(CUart3,sizeof(CUart3));
+ 133   1      //  Uart4SendStr(CUart4,sizeof(CUart4));
+ 134   1      //  Uart5SendStr(CUart5,sizeof(CUart5));
+ 135   1      }
+ 136          
+ 137          #if 1
+ 138          /*****************************************************************************
+ 139          跳转指定页面*/
+ 140          void JumpPage(uint16_t pageId)
+ 141          {
+ 142   1        uint8_t temp[4]={0x5A,0x01,0,0};
+ 143   1        temp[2]=(uint8_t)(pageId>>8);
+ 144   1        temp[3]=pageId;
+ 145   1        WriteDGUS(DHW_SPAGE,temp,sizeof(temp));
+ 146   1        do
+ 147   1        {
+ 148   2          DelayMs(5);
+ 149   2          ReadDGUS(DHW_SPAGE,temp,1);
+ 150   2        }while(temp[0]!=0);
+ 151   1      }
+ 152          #endif
+ 153          
+ 154          
+ 155          
+ 156          
+ 157          void page_set(uint16_t getDar)
+ 158          {
+ 159   1      //u16 char_attend_rtc=0x1300;
+ 160   1      //        else  if(Page_s[1]==Page_shezhi)
+ 161   1      //  {
+ 162   1        
+ 163   1        
+ 164   1        
+ 165   1          switch(CurrentPageNum[1])
+ 166   1        {
+ 167   2          case Page_home: 
+ 168   2          {
+ 169   3      
+ 170   3            
+ 171   3            break;
+ 172   3          }
+ 173   2          
+ 174   2          case Page_qirongjiao:
+ 175   2          {
+ 176   3            if(getDar==0x3010)  //按下开始暂停 但不知道是哪个
+ 177   3            {
+ 178   4              //QRJ_run();
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 4   
+
+ 179   4                if(get_data1()==0x01) //读取数据  开始
+ 180   4                {
+ 181   5                  if(current_st==0x05)  //自然结束
+ 182   5                  {
+ 183   6                    QRJ_Reset();
+ 184   6                    current_st = 0x03;
+ 185   6                    Lock_current_page();
+ 186   6                    WriteDGUS(0x3010,(uint8_t *)&icon[1],sizeof(icon[1]));  //图标 变开始
+ 187   6                  }
+ 188   5                  else  if(current_st == 0x02){current_st = 0x03;Lock_current_page();}  //由就绪态来的
+ 189   5                  
+ 190   5                  else if(current_st == 0x04){current_st = 0x03;}//由暂停来的
+ 191   5                }
+ 192   4                else if(get_data1()==0x00)  //暂停
+ 193   4                {
+ 194   5                  current_st = 0x04;
+ 195   5                  
+ 196   5                }
+ 197   4                else current_st = 0x01;
+ 198   4              
+ 199   4            }
+ 200   3            else if(getDar==0x3020) //按下复位建
+ 201   3            {
+ 202   4              current_st = 0x06;  //复位
+ 203   4              //QRJ_Reset();
+ 204   4            }
+ 205   3            
+ 206   3            
+ 207   3            break;
+ 208   3          }
+ 209   2            
+ 210   2          case Page_zhongxin:
+ 211   2          {
+ 212   3            
+ 213   3      
+ 214   3            
+ 215   3            break;
+ 216   3          }
+ 217   2          
+ 218   2          case Page_quyu:
+ 219   2          {
+ 220   3            
+ 221   3      
+ 222   3            
+ 223   3            break;
+ 224   3          }
+ 225   2          
+ 226   2              
+ 227   2          case Page_chengxuhua:
+ 228   2          {
+ 229   3      
+ 230   3            break;
+ 231   3          }
+ 232   2          
+ 233   2              
+ 234   2          case Page_zhiliao:
+ 235   2          {
+ 236   3            break;
+ 237   3          }
+ 238   2          
+ 239   2              
+ 240   2          case Page_shoudong:
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 5   
+
+ 241   2          {   
+ 242   3      
+ 243   3            break;
+ 244   3          }
+ 245   2                
+ 246   2          case Page_lianji:
+ 247   2          {
+ 248   3        
+ 249   3            break;
+ 250   3          }
+ 251   2          
+ 252   2              
+ 253   2          case Page_shezhi:
+ 254   2          {
+ 255   3        if(getDar==0x1440 ||  getDar==0x1441) //屏幕亮度
+ 256   3        {
+ 257   4            //set_page_write();
+ 258   4        }
+ 259   3        else if(getDar==0x1400)   //rtc set finish
+ 260   3        {
+ 261   4          RTC_SET_IN(); 
+ 262   4        }
+ 263   3        else if(getDar==0x1410)   //治疗预设写入 flash
+ 264   3        {
+ 265   4          //zhiliao_SET();
+ 266   4        }
+ 267   3        else if(getDar==0x1420)   //开机自动启动 
+ 268   3        {
+ 269   4          //Sudoopen_set_handle();
+ 270   4        }
+ 271   3        else if(getDar==0x1430)         //恢复出厂设置
+ 272   3        {
+ 273   4         //reset_data();
+ 274   4        }
+ 275   3            break;
+ 276   3          }
+ 277   2          
+ 278   2          case Page_chengxuhua_JUMP:
+ 279   2          {
+ 280   3            
+ 281   3            break;
+ 282   3          }
+ 283   2              
+ 284   2            case Page_zhiliao_JUMP:
+ 285   2          {
+ 286   3            break;
+ 287   3          }
+ 288   2          default:
+ 289   2          {
+ 290   3            
+ 291   3            break;
+ 292   3          }
+ 293   2          
+ 294   2        }
+ 295   1        
+ 296   1      
+ 297   1        
+ 298   1        
+ 299   1        
+ 300   1        
+ 301   1      }
+ 302            
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 6   
+
+ 303            
+ 304          /*****************************************************************************
+ 305          按键按压之后处理流程*/
+ 306          void TouchHandle(void)
+ 307          {
+ 308   1        uint8_t temp[16]={0};
+ 309   1        uint16_t flag=0;
+ 310   1        uint16_t iconid=0;
+ 311   1        uint16_t getDar=0;
+ 312   1        getDar = value0F00[1]<<8|value0F00[2];
+ 313   1        LOG((uint8_t *)&getDar,sizeof(getDar));
+ 314   1        
+ 315   1        s_dl_t_645_8283_body.st_byte1=0x5A;
+ 316   1        s_dl_t_645_8283_body.st_byte2=0xA5;
+ 317   1        s_dl_t_645_8283_body.lenth=value0F00[3]*2+3;  
+ 318   1        s_dl_t_645_8283_body.func=0x83; 
+ 319   1        s_dl_t_645_8283_body.addr1=value0F00[1];
+ 320   1        s_dl_t_645_8283_body.addr2=value0F00[2];
+ 321   1        ReadDGUS(getDar,(uint8_t *)&s_dl_t_645_8283_body.edata[0],value0F00[3]*2);  //edata[0] edata[1]读取16bit
+ 322   1        
+ 323   1        
+ 324   1        page_set(getDar);
+ 325   1        
+ 326   1        
+ 327   1        
+ 328   1        
+ 329   1      //  Uart2SendStr((uint8_t *)&s_dl_t_645_8283_body,s_dl_t_645_8283_body.lenth+3);
+ 330   1      
+ 331   1      //  switch(getDar)
+ 332   1      //  {
+ 333   1      //    default:
+ 334   1      //    break;
+ 335   1      //  }
+ 336   1      }
+ 337          
+ 338          /*****************************************************************************
+ 339          功能：回传数据*/
+ 340          void dlt645_handle(void)
+ 341          {
+ 342   1        uint16_t ADDR=0;
+ 343   1      
+ 344   1        ADDR = ((uint16_t)(s_dl_t_645_8283_body.addr1))<<8 | s_dl_t_645_8283_body.addr2;
+ 345   1      
+ 346   1        if(s_dl_t_645_8283_body.func == 0x82)
+ 347   1        {
+ 348   2          WriteDGUS(ADDR,(uint8_t *)&(s_dl_t_645_8283_body.edata),s_dl_t_645_8283_body.lenth-3);
+ 349   2          s_dl_t_645_8283_body.lenth=3;
+ 350   2          s_dl_t_645_8283_body.addr1=0x4F;
+ 351   2          s_dl_t_645_8283_body.addr2=0x4B;
+ 352   2          Uart2SendStr((uint8_t *)&s_dl_t_645_8283_body,s_dl_t_645_8283_body.lenth+3);
+ 353   2        }
+ 354   1        else if(s_dl_t_645_8283_body.func == 0x83)
+ 355   1        {
+ 356   2          ReadDGUS(ADDR,(uint8_t *)&(s_dl_t_645_8283_body.edata[1]),s_dl_t_645_8283_body.edata[0]*2);
+ 357   2          s_dl_t_645_8283_body.lenth+=s_dl_t_645_8283_body.edata[0]*2;
+ 358   2          Uart2SendStr((uint8_t *)&s_dl_t_645_8283_body,s_dl_t_645_8283_body.lenth+3);
+ 359   2        }
+ 360   1        
+ 361   1      }
+ 362          /*****************************************************************************
+ 363          功能:检索一帧数据将值赋给结构体*/
+ 364          uint8_t parse_dlt645_frame(uint8_t *p_frame, uint16_t frame_len, uint8_t* sframe_body)
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 7   
+
+ 365          {
+ 366   1          uint16_t temp16_t = 0;//一帧数据的总长度
+ 367   1          uint16_t i = 0;
+ 368   1      
+ 369   1          if(1){
+ 370   2              memcpy(sframe_body,p_frame, frame_len);
+ 371   2              return 1;
+ 372   2          }
+ 373   1         // return 0;     //上面if(1)永远都成立，执行不到这一行
+ 374   1      } 
+ 375          /*****************************************************************************
+ 376          功能:从缓存区buf中检索dlt645帧数据*/
+ 377          /*
+ 378           * 将一帧数据读取到frame_buf中     
+ 379           * line:缓存区0x7F开头的数据
+ 380           * out:将捡出来的帧复制到该数组中
+ 381           * frame_len:捡出来的帧的长度，
+ 382           * line_len:缓存区buf中0x7F开头的数据长度
+ 383           **/
+ 384          frame_result_t find_dlt645_frame(uint8_t* line, uint8_t* out, uint16_t* frame_len, uint16_t line_len) {
+ 385   1          uint16_t frame_length = 0;//一帧数据的总长度
+ 386   1          uint16_t temp_len = 0;
+ 387   1      
+ 388   1          if (line_len < DLT_645_LEAST_LEN) {
+ 389   2              return UNFINISHED;
+ 390   2          }
+ 391   1          //判断第0位
+ 392   1          if (line[0] != 0x5A) {  
+ 393   2              return ERROR;
+ 394   2          }
+ 395   1          if (line[1] != 0xA5) {  
+ 396   2              return ERROR;
+ 397   2          }   
+ 398   1          frame_length = line[2]+3;
+ 399   1          
+ 400   1          if (frame_length <= line_len) {
+ 401   2                  //检到一帧数据                
+ 402   2                  for (temp_len = 0; temp_len < frame_length; temp_len ++) {
+ 403   3                      out[temp_len] = *line;
+ 404   3                      line++;
+ 405   3                  }
+ 406   2                  *frame_len = frame_length;
+ 407   2                  return OK;
+ 408   2          } else {
+ 409   2              //数据还没接收完整
+ 410   2              return UNFINISHED;
+ 411   2          }
+ 412   1      }
+ 413          
+ 414          /*****************************************************************************
+ 415          功能:协议数据解析*/
+ 416          void ParseBuffer(void)
+ 417          {
+ 418   1          uint16_t frame_length = 0;//一帧数据的总长度
+ 419   1          uint16_t i = 0, temp_len = 0;
+ 420   1          uint8_t has_content = 0;//buf中是否有数据
+ 421   1          uint8_t frame_error = 0;//缓存区当前的数据对所有协议都不满足
+ 422   1          uint8_t*  p_buf= Uart2_Rx;
+ 423   1          protocol_type_t protl_type = PROTOCOL_UNKNOWN;
+ 424   1          frame_result_t find_frame_re = UNKNOWN;
+ 425   1      
+ 426   1          //用来保存每个协议解析后的结果 
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 8   
+
+ 427   1          //frame_results[0] 保存PROTOCOL_DL_T_645协议解析结果
+ 428   1          //frame_results[1] 保存PROTOCOL_DL_T_698协议解析结果
+ 429   1          frame_result_t frame_results[2] = {UNKNOWN, UNKNOWN}; 
+ 430   1      
+ 431   1          has_content = uart2_rx_count > 2;
+ 432   1          while (has_content) {
+ 433   2              p_buf = Uart2_Rx;
+ 434   2              //检索0x5A开头的数据
+ 435   2              while (*p_buf != 0x5A && p_buf < Uart2_Rx + uart2_rx_count) {
+ 436   3                  p_buf ++;
+ 437   3              }
+ 438   2              if (p_buf == Uart2_Rx + uart2_rx_count) {
+ 439   3                  //检索当前包数据，都不包含，清空
+ 440   3                  uart2_rx_count = 0;
+ 441   3                  break;
+ 442   3              }
+ 443   2              //Uart4_Rx中剩余的数据长度
+ 444   2              temp_len = uart2_rx_count - (p_buf - Uart2_Rx);
+ 445   2      
+ 446   2              //以下处理不包含校验
+ 447   2              switch(protl_type) {
+ 448   3                  case PROTOCOL_UNKNOWN:
+ 449   3                      memset(frame_buf,0,sizeof(frame_buf));
+ 450   3                      find_frame_re = UNKNOWN;
+ 451   3                      frame_error = 0;
+ 452   3                      frame_length = 0;
+ 453   3                      for (i = 0; i < 3; i ++) {
+ 454   4                          frame_results[i] = UNKNOWN;
+ 455   4                      }
+ 456   3                      
+ 457   3                  case PROTOCOL_DL_T_645:
+ 458   3                      find_frame_re = find_dlt645_frame(p_buf, frame_buf, &frame_length, temp_len);
+ 459   3      
+ 460   3                      frame_results[0] = find_frame_re;
+ 461   3                      if (find_frame_re == OK) {
+ 462   4                            if (parse_dlt645_frame(frame_buf, frame_length, (uint8_t *)&s_dl_t_645_8283_body)) {
+ 463   5                                //解析到一包有效数据
+ 464   5                              dlt645_handle();
+ 465   5                              memset(&s_dl_t_645_8283_body, 0, sizeof(dl_t_645_8283_body));
+ 466   5                            }
+ 467   4                            break;
+ 468   4                      }
+ 469   3      
+ 470   3                  case PROTOCOL_OTHER:
+ 471   3                      //此处添加其他协议解析
+ 472   3                      //break;
+ 473   3                      
+ 474   3                  default :
+ 475   3                      if (frame_results[0] == ERROR ) {
+ 476   4                          //缓存区的数据不满足现有协议的解析
+ 477   4                          //继续找下一个0x7F起始符
+ 478   4                          p_buf ++;//跳过当前的0x7F
+ 479   4                          //检索0x7F开头的数据
+ 480   4                          while (*p_buf != 0x5A && p_buf < Uart2_Rx + uart2_rx_count) {
+ 481   5                              p_buf ++;
+ 482   5                          }
+ 483   4                          
+ 484   4                          if (p_buf == Uart2_Rx + uart2_rx_count) {
+ 485   5                              //检索当前包数据，都不包含，清空
+ 486   5                              uart2_rx_count = 0;
+ 487   5                              break;
+ 488   5                          }
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 9   
+
+ 489   4      
+ 490   4                          //找到下一条0x5A开头的数据帧
+ 491   4                          frame_error = 1;
+ 492   4                      }
+ 493   3                      break;
+ 494   3              }
+ 495   2      
+ 496   2              //当成功检索到一帧数据或缓存区的数据不满足现有协议的解析
+ 497   2              //buf中剩余的有效数据前移
+ 498   2              if (find_frame_re == OK || frame_error) {
+ 499   3                  //uart_rcvd_buf剩余的数据长度
+ 500   3                  temp_len = uart2_rx_count - (p_buf - Uart2_Rx) - frame_length;
+ 501   3                  if (temp_len > 0) {
+ 502   4                      //当前uart_rcvd_buf中剩余的数据前移
+ 503   4                      for (i = 0; i < temp_len; i ++) {
+ 504   5                          Uart2_Rx[i] = *(p_buf + frame_length + i);
+ 505   5                          *(p_buf + frame_length + i) = 0x00;
+ 506   5                      }
+ 507   4                      has_content = 1;//继续循环解析
+ 508   4                  } else {
+ 509   4                      //解析过的位清空
+ 510   4                      for (i = 0; i < (p_buf - Uart2_Rx) + frame_length; i ++) {
+ 511   5                          Uart2_Rx[i] = 0x00;
+ 512   5                      }
+ 513   4                      has_content = 0;
+ 514   4                  }
+ 515   3                  uart2_rx_count = temp_len;
+ 516   3              } else {
+ 517   3                  has_content = 0;
+ 518   3              }
+ 519   2          }
+ 520   1      }
+ 521          
+ 522          
+ 523          /*****************************************************************************
+ 524          主流程*/
+ 525          void HandleProc(void)
+ 526          {
+ 527   1          if(GetValue0F00())    //检测是否有触摸上传数据
+ 528   1          {
+ 529   2            TouchHandle();
+ 530   2          }
+ 531   1          ParseBuffer();
+ 532   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2065    ----
+   CONSTANT SIZE    =    105    ----
+   XDATA SIZE       =    771      84
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

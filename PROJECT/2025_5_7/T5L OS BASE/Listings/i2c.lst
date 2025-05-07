@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 18:17:57 PAGE 1   
+C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 21:45:03 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE I2C
 OBJECT MODULE PLACED IN .\Objects\i2c.obj
-COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE APP\i2c.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.\A
-                    -PP;.\PAGE) DEBUG PRINT(.\Listings\i2c.lst) TABS(2) OBJECT(.\Objects\i2c.obj)
+COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE APP\i2c.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.\APP
+                    -;.\PAGE) DEBUG PRINT(.\Listings\i2c.lst) TABS(2) OBJECT(.\Objects\i2c.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52   1      
   53   1      //RTC[2]=0x12;
   54   1      //RTC[3]=0x66;
-C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 18:17:57 PAGE 2   
+C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 21:45:03 PAGE 2   
 
   55   1      //RTC[4]=0x37;
   56   1      //RTC[5]=0x06;
@@ -126,7 +126,7 @@ line level    source
  114   1                  Delayus();  //15
  115   1                  RTC_SDA=0;
  116   1                  Delayus();  //15
-C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 18:17:57 PAGE 3   
+C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 21:45:03 PAGE 3   
 
  117   1                  RTC_SCL=0;
  118   1                  Delayus();  //15
@@ -190,7 +190,7 @@ line level    source
  176   1                  for(i=0;i<8;i++)
  177   1                  { 
  178   2                            if(dat&0x80)   RTC_SDA=1;
-C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 18:17:57 PAGE 4   
+C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 21:45:03 PAGE 4   
 
  179   2                          else           RTC_SDA=0;
  180   2                          dat=(dat<<1);
@@ -254,7 +254,7 @@ line level    source
  238   1                  Rx8130_Writ_Byte(0x65);
  239   1                  for(i=6;i>0;i--)
  240   1                  { 
-C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 18:17:57 PAGE 5   
+C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 21:45:03 PAGE 5   
 
  241   2                                Rtcdata[i]=Rx8130_Read_Byte();
  242   2                                Rx8130_Mack();
@@ -318,7 +318,7 @@ line level    source
  300   2                        Rx8130_Writ_Byte(0x00); //时
  301   2                        Rx8130_Writ_Byte(0x01); //星期
  302   2                        Rx8130_Writ_Byte(0x01); //日
-C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 18:17:57 PAGE 6   
+C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 21:45:03 PAGE 6   
 
  303   2                        Rx8130_Writ_Byte(0x01); //月
  304   2                        Rx8130_Writ_Byte(0x17); //年
@@ -382,7 +382,7 @@ line level    source
  362   3                              Rx8130_Writ_Byte(TimeS[2]); //日
  363   3                              Rx8130_Writ_Byte(TimeS[1]); //月
  364   3                              Rx8130_Writ_Byte(TimeS[0]); //年
-C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 18:17:57 PAGE 7   
+C51 COMPILER V9.59.0.0   I2C                                                               05/07/2025 21:45:03 PAGE 7   
 
  365   3                              Rx8130_Stop();
  366   3                              Rx8130_Start();   //1E-1F 00 10

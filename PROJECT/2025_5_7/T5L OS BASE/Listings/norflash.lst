@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   NORFLASH                                                          05/07/2025 18:17:56 PAGE 1   
+C51 COMPILER V9.59.0.0   NORFLASH                                                          05/07/2025 21:45:03 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE NORFLASH
 OBJECT MODULE PLACED IN .\Objects\norflash.obj
-COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\norflash.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\So
-                    -urces;.\APP;.\PAGE) DEBUG PRINT(.\Listings\norflash.lst) TABS(2) OBJECT(.\Objects\norflash.obj)
+COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\norflash.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sour
+                    -ces;.\APP;.\PAGE) DEBUG PRINT(.\Listings\norflash.lst) TABS(2) OBJECT(.\Objects\norflash.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
               /*****************************************************************************
               写NorFlash*/
               /*****************************************************************************
-C51 COMPILER V9.59.0.0   NORFLASH                                                          05/07/2025 18:17:56 PAGE 2   
+C51 COMPILER V9.59.0.0   NORFLASH                                                          05/07/2025 21:45:03 PAGE 2   
 
                函 数 名  : WriteNorFlash
                功能描述  : 写NorFlash
