@@ -1,0 +1,745 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\main.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\L
+                    -istings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * ÎÄ ¼þ Ãû   : main.c
+   3          * °æ ±¾ ºÅ   : V1.0
+   4          * ×÷    Õß   : pinot
+   5          * Éú³ÉÈÕÆÚ   : 2019Äê11ÔÂ01ÈÕ
+   6          * ¹¦ÄÜÃèÊö   : Ö÷º¯Êý£¬ÍâÉèºÍ²ÎÊý³õÊ¼»¯£¬Ö÷Ñ­»·ÖÐÖ÷Òª¹¦ÄÜº¯ÊýÈë¿Ú¡£
+   7          * ÐÞ¸ÄÀúÊ·   :
+   8          * ÈÕ    ÆÚ   :
+   9          * ×÷    Õß   :
+  10          * ÐÞ¸ÄÄÚÈÝ   :2023.2.8 ÆøÈÜ½ºÄ£Ê½ 1£©²»°´ÈÎºÎ¼ü ¾àÀëºÍ¹¦ÂÊÏÔÊ¾Êý¾Ý¡£2£©Ê±¼ä×Ô¶¯½áÊøºó£¬·øÉäÁ¿¡¢Ê±¼ä½ø¶ÈÌõº
+             -Í·øÉäÁ¿ÇúÏß±£³ÖÉÏ´Î²»±ä£¬3£©¸´Î»ºó£¬Ê±¼ä½ø¶ÈÌõºÍ·øÉäÁ¿¸´Î»£¬·øÉäÇúÏßÈÔÈ»±£´æ
+  11                        2021.2.9 ¸üÐÂÒ³Ãæ Ôö¼Ó°´¼üÐ§¹û£¨¿ªÊ¼¡¢ÔÝÍ££©£¬È¡ÏûÊ±¼ä½ø¶ÈÌõ¸ÄÎªÕýÔÚ½øÐÐÊ±¼ä¡¢Ê£ÓàÊ±¼ä¡¢×ÜÊ±¼ä£¬
+  12          
+  13          ******************************************************************************/
+  14          
+  15          
+  16          
+  17          /*****************************************************************************
+  18          ÏµÍ³¿â*/
+  19          
+  20          /*****************************************************************************
+  21          ×Ô¶¨ÒåÍ·ÎÄ¼þ*/
+  22          #include "T5LOS8051.H"
+  23          #include "sys.h"
+  24          #include "handle.h"
+  25          #include <stdio.h>
+  26          #include "math.h"
+  27          #include "adc.h"
+  28          #include "sys_params.h"
+  29          #include "uart4.h"
+  30          #include  "start_win.h"
+  31          #include "column_chart.h"
+  32          #include "mode_4.h"
+  33          #include "T5LUart4.h"
+  34          #include "string.h"
+  35          
+  36          u8 test_error[9]={1,2,3,4,5,6,7,8,9};
+  37          uint UART5_FLAG =0;
+  38          //×´Ì¬»ú   =0  µÈ´ýµÚÒ»¸ö5A   =1  µÈ´ýµÚ¶þ¸ö5A =>3 µÚ¼¸¸öÊý¾Ý
+  39          uchar DATA15=00;   //Ð£ÑéºÍ
+  40          uchar GY53_Data[16];//½ÓÊÜµ½µÄÍêÕûÊý¾Ý
+  41          uchar Dat;
+  42          uint32_t L[3]={0,0,0};
+  43          //uint L_1=11111;
+  44          uint L_int;
+  45          uint MODE=0;
+  46          uint W_P_uJ[5]={0};
+  47          uint W_S[5]={0};
+  48          bit OPEN_P=0X00;        
+  49          bit OPEN_S=0X00;    
+  50          
+  51          uint b=0;
+  52          uint c=0;
+  53          uint hour=0;
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 2   
+
+  54          //#define ZIWAIXIAN_Status_Ad 0x3600
+  55          //uint Status_Flag=0; /*****0ºìµÆ*****1»ÆµÆ*****2ÂÌµÆ********/
+  56          
+  57          uint norflash_Guanji_flag_5s = 0;
+  58          u8 test=1;
+  59          
+  60          //uint nor_UV_flag[3]={0};
+  61          //uint Buttom_Write[4]={0};
+  62          //uint buttom_flag=0;
+  63          
+  64          uint Status_Current=0;  
+  65          uint Status[5]={0,1,2,4,8}; 
+  66          uint MODE_Static=0;
+  67          
+  68          
+  69          u8 Page_flag=0;
+  70          
+  71          
+  72          bit First_Init=1; //¿ª¾Ö³õÊ¼»¯
+  73          bit Read_buff=1;
+  74          u8 Read_First_Distance[2];
+  75          u16 L_sp_ad=0x4900; //ÃèÊöÖ¸Õë
+  76          u16 L_vp_ad=0x2500;
+  77          bit L_change=0;
+  78          
+  79          uint l_mode2;
+  80          /***************************¼¤¹â²â¾à********************/
+  81          void UART5_isr()
+  82          {
+  83   1      
+  84   1        uchar Dat = SBUF3_RX;               //¶Áµ½Õâ´ÎµÄÊý¾Ý  
+  85   1        //Uart2SendByte((uint8_t *)&L);
+  86   1        //DAT_W_EEPROM = EEPROM_Read(0);
+  87   1        //UART_Send_byte(1,KEY_FLAG);           //ÓÃ´®¿Ú1°Ñ´®¿Ú2µÄÊý¾Ý·¢³öÀ´
+  88   1        switch(UART5_FLAG)
+  89   1        {
+  90   2          case 0:
+  91   2          {
+  92   3            if(Dat == 0x57)                 //ÅÐ¶ÏµÚÒ»¸ö5A
+  93   3            {
+  94   4              GY53_Data[UART5_FLAG] = Dat;   //´æÆðÀ´
+  95   4              UART5_FLAG=1;                //×´Ì¬ÖÃ1
+  96   4            }
+  97   3            break;
+  98   3          }
+  99   2          case 1:
+ 100   2          {
+ 101   3            if(Dat == 0x00)                 //ÅÐ¶ÏµÚ¶þ¸ö5A
+ 102   3            {
+ 103   4              GY53_Data[UART5_FLAG] = Dat;   //´æÆðÀ´
+ 104   4              UART5_FLAG=2;                  //×´Ì¬ÖÃ2
+ 105   4            }
+ 106   3            else
+ 107   3            {
+ 108   4              UART5_FLAG = 0;               //×´Ì¬ÖÃ0
+ 109   4            }
+ 110   3            break;
+ 111   3          }
+ 112   2          default:
+ 113   2          {
+ 114   3                GY53_Data[UART5_FLAG] = Dat;
+ 115   3                UART5_FLAG++;
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 3   
+
+ 116   3                if(UART5_FLAG>0x0F)                   //00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 
+ 117   3            {
+ 118   4      
+ 119   4                UART5_FLAG = 0;                       //×´Ì¬ÖÃ0       
+ 120   4                DATA15 = GY53_Data[0X00]+GY53_Data[0X01]+GY53_Data[0X02]+GY53_Data[0X03]+GY53_Data[0X04]+GY53_Data[0X
+             -05]+GY53_Data[0X06]+GY53_Data[0X07]+GY53_Data[0X08]+GY53_Data[0X09]+GY53_Data[0X0A]+GY53_Data[0X0B]+GY53_Data[0X0C]+GY53
+             -_Data[0X0D]+GY53_Data[0X0E]; //¼ÆËãÐ£ÑéºÍ
+ 121   4      
+ 122   4              
+ 123   4              if(DATA15 == GY53_Data[0X0F])           //¼ìÑéÊ±ºò³É¹¦
+ 124   4              {
+ 125   5              //L[0] = ((GY53_Data[0X0A]<<16 | GY53_Data[0X09]<<8) | GY53_Data[0X08]); 
+ 126   5                
+ 127   5                /*************¼ì²â×´Ì¬Î»ÊÇ·ñÎª0********************/
+ 128   5                if(GY53_Data[0X0b]==0)
+ 129   5                {
+ 130   6      
+ 131   6                L_int=((GY53_Data[0X0A]<<16 | GY53_Data[0X09]<<8) | GY53_Data[0X08]);
+ 132   6      
+ 133   6                  if(L_change==1)
+ 134   6                  {
+ 135   7                    L_change=0;
+ 136   7                    if(MODE==1)WriteDGUS(0x4913,(uint8_t *)&(colour_w),sizeof(colour_w));
+ 137   7                      else
+ 138   7                    WriteDGUS(L_sp_ad+0x3,(uint8_t *)&(colour_w),sizeof(colour_w));
+ 139   7                  }
+ 140   6                  
+ 141   6                }
+ 142   5                else  {L_change=1;
+ 143   6                if(MODE==1)WriteDGUS(0x4913,(uint8_t *)&(colour_y),sizeof(colour_y));
+ 144   6                else WriteDGUS(L_sp_ad+0x3,(uint8_t *)&(colour_y),sizeof(colour_y));} 
+ 145   5                //(GY53_Data[0X0A]     GY53_Data[0X09]      GY53_Data[0X08]   //1000=xxx.m
+ 146   5      
+ 147   5              }
+ 148   4            }
+ 149   3            break;
+ 150   3          }
+ 151   2        }
+ 152   1      }
+ 153          
+ 154          
+ 155          
+ 156          
+ 157          
+ 158          
+ 159          
+ 160          
+ 161          
+ 162          
+ 163          
+ 164          
+ 165          
+ 166          /***************************²â¾àÉÏ´«º¯Êý*************************/
+ 167          
+ 168          void shangchuan(void)
+ 169          {
+ 170   1      
+ 171   1        uint T_doing_min_int=0;
+ 172   1        uint T_first_min_int=0;
+ 173   1        uint T_doing_sec_int=0;
+ 174   1        uint T_first_sec_int=0;
+ 175   1        uint T_first_h_int=0;
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 4   
+
+ 176   1        u16 baifenbi_T=0;
+ 177   1        float I=0.0;
+ 178   1      
+ 179   1        T_doing_min_int=T_doing/60;
+ 180   1        T_doing_sec_int=T_doing%60;
+ 181   1        
+ 182   1        if(MODE==2&&dynamic_static_flag)
+ 183   1        {
+ 184   2        T_first_min_int=T_dynamic/60;
+ 185   2        T_first_sec_int=T_dynamic%60;
+ 186   2        }
+ 187   1        else
+ 188   1        {
+ 189   2        T_first_min_int=T_All/60;
+ 190   2        T_first_sec_int=T_All%60;
+ 191   2        }
+ 192   1      
+ 193   1        EA=0;
+ 194   1      
+ 195   1        //¼ÆËãÊ£ÓàÊ±¼ä±ä³É·ÖÖÓÐ¡Ê±
+ 196   1          c=T_XIANSHI/60;
+ 197   1          b=T_XIANSHI%60;
+ 198   1      
+ 199   1        
+ 200   1        if(dynamic_static_flag&&MODE==2 ) //ÖÎÁÆÄ£Ê½ÏÂ ¶¯Ì¬Ê±¼ä ¸ü¸Ä°Ù·Ö±ÈµÄËã·¨
+ 201   1        {
+ 202   2          baifenbi_T=(float)(T_doing)/(float)(T_dynamic)*100;
+ 203   2        } else  baifenbi_T=(float)(T_doing)/(float)(T_All)*100;
+ 204   1      
+ 205   1        
+ 206   1        
+ 207   1        if(baifenbi_T>100||baifenbi_T==99)  //Éè¶¨°Ù·Ö±È
+ 208   1        {
+ 209   2          baifenbi_T=100;
+ 210   2        }
+ 211   1      
+ 212   1        
+ 213   1        if(MODE==2)   //×ª»»³ÉÐ¡Ê± ÖÎÁÆÄ£Ê½ºÍÊÖ¶¯Ä£Ê½Ö§³ÖÐ¡Ê±
+ 214   1        {
+ 215   2          if(c>=60){hour=c/60;c=c%60;WriteDGUS(0x1720,(uint8_t *)&attend_sp_0,sizeof(attend_sp_0)); WriteDGUS(0x17
+             -10,(uint8_t *)&(hour),sizeof(hour));  }
+ 216   2          else 
+ 217   2          {WriteDGUS(0x1720,(uint8_t *)&(exit_sp),sizeof(exit_sp));}
+ 218   2            
+ 219   2          if(T_first_min_int>=60)   
+ 220   2          {
+ 221   3            T_first_h_int=T_first_min_int/60;T_first_min_int=T_first_min_int%60;WriteDGUS(0x1820,(uint8_t *)&(atten
+             -d_sp_1),sizeof(attend_sp_1)); WriteDGUS(0x1810,(uint8_t *)&(T_first_h_int),sizeof(T_first_h_int));
+ 222   3          }   else 
+ 223   2          {WriteDGUS(0x1820,(uint8_t *)&(exit_sp),sizeof(exit_sp));}
+ 224   2        }
+ 225   1        
+ 226   1        
+ 227   1        WriteDGUS(T_XIANSHI_1,(uint8_t *)&c,sizeof(c));   /***Ê£ÓàÊ±¼ä*·ÖÖÓ****/
+ 228   1        WriteDGUS(0x2805,(uint8_t *)&b,sizeof(b));    /***Ê£ÓàÊ±¼ä*Ãë****/
+ 229   1      
+ 230   1        
+ 231   1        WriteDGUS(0x2830,(uint8_t *)&(baifenbi_T),sizeof(baifenbi_T));    
+ 232   1      
+ 233   1        if(MODE==4){  WriteDGUS(0x5000,(uint8_t *)&(mj_mode4),sizeof(mj_mode4));}   /******MODE4ºÁ½¹¶ú****/
+ 234   1      
+ 235   1        WriteDGUS(0x2820,(uint8_t *)&(T_first_min_int),sizeof(T_first_min_int));    /***×ÜÊ±¼ä*·ÖÖÓ****/
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 5   
+
+ 236   1        WriteDGUS(0x2825,(uint8_t *)&(T_first_sec_int),sizeof(T_first_sec_int));    /***×ÜÊ±¼ä*Ãë****/
+ 237   1        
+ 238   1        if(MODE==1){
+ 239   2          WriteDGUS(0x2840,(uint8_t *)&(D),sizeof(D));              //Ö±¾¶
+ 240   2          if(W_S[0]==0x01 &&  MODE==1){   WriteDGUS(0x2850,(uint8_t *)&(Volume),sizeof(Volume));} //ÆøÈÜ½ºÎªÌå»ý
+ 241   2          else {WriteDGUS(0x2850,(uint8_t *)&(Square),sizeof(Square));}   //Ãæ»ý  
+ 242   2        }
+ 243   1          if(Page_s[1]==Page_shezhi)    //Ð´ÈëADC
+ 244   1          {
+ 245   2            I=(adc_10-adc_08)/0.5*1.02;
+ 246   2            WriteDGUS(ADC_08_AD,(uint8_t *)&I,sizeof(I));
+ 247   2            WriteDGUS(ADC_09_AD,(uint8_t *)&adc_09,sizeof(adc_09));
+ 248   2            WriteDGUS(ADC_10_AD,(uint8_t *)&adc_10,sizeof(adc_10));
+ 249   2          }
+ 250   1      
+ 251   1          //if(W_S[0]==0x03&& MODE==1){change_P_mW_doing=change_P_mW_doing/2.00;}
+ 252   1          WriteDGUS(0x2600,(uint8_t *)&change_P_mW_doing,sizeof(change_P_mW_doing));    /*********¹¦ÂÊ**************
+             -**/
+ 253   1          WriteDGUS(0x2700,(uint8_t *)&W_mJ_doing,sizeof(W_mJ_doing));
+ 254   1      
+ 255   1      EA=1;
+ 256   1      
+ 257   1      }         
+ 258          
+ 259          void Mode_1_run() //Ä£Ê½Ò» ÎªÆøÈÜ½ºÄ£Ê½£¬ÇøÓòÄ£Ê½£¬ÖÐÐÄÄ£Ê½
+ 260          {
+ 261   1        EA=0;
+ 262   1          if(W_S[2]==0x01)
+ 263   1          {
+ 264   2            WriteDGUS(0x3010,(uint8_t *)&W_S[3],sizeof(W_S[3]));
+ 265   2            W_S[1]=0X00;
+ 266   2            W_S[2]=0x00;
+ 267   2            W_mJ_XIANSHI=0;
+ 268   2          }
+ 269   1        if(W_S[1]==0x01)
+ 270   1        {
+ 271   2          if(OPEN_S==0)
+ 272   2          {
+ 273   3            MODE_Static=1;
+ 274   3            //UV=1;
+ 275   3          //W_FINISH=W_P_uJ[0]; /*****mJ*****/    
+ 276   3          ZIWAIXIAN_S_FINISH_FLAG=1;
+ 277   3            OPEN_S=1;
+ 278   3          }
+ 279   2        }
+ 280   1        else if(W_S[1]==0x00) {ZIWAIXIAN_S_FINISH_FLAG=0;OPEN_S=0;UV=0;
+ 281   2        
+ 282   2            if(MODE_Static==0)  //Î´¿ªÆôÏÔÊ¾Ê£ÓàÊ±¼ä
+ 283   2        {
+ 284   3              Static_T_Current_mode1();
+ 285   3        }}
+ 286   1        
+ 287   1        W_S[0]=BUff_main[0];
+ 288   1        
+ 289   1        //EA=1;
+ 290   1      }
+ 291          
+ 292          
+ 293          void Mode_2_run() //Ä£Ê½¶þÎªÖÎÁÆÄ£Ê½
+ 294          {
+ 295   1        EA=0;
+ 296   1          if(W_P_uJ[2]==0x01)
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 6   
+
+ 297   1          {
+ 298   2            WriteDGUS(0x3010,(uint8_t *)&W_P_uJ[3],sizeof(W_P_uJ[3]));
+ 299   2            W_P_uJ[1]=0X00;
+ 300   2            W_P_uJ[2]=0x00;
+ 301   2          }
+ 302   1        if(W_P_uJ[1]==0x01)
+ 303   1        {
+ 304   2          ZIWAIXIAN_FINISH_FLAG=1;    
+ 305   2          MODE_Static=2;
+ 306   2          if(OPEN_P==0)
+ 307   2          { 
+ 308   3      //    ReadDGUS(0x2410,(uint8_t *)&PWM_ON,sizeof(PWM_ON));   //Âö³åon
+ 309   3      //    ReadDGUS(0x2420,(uint8_t *)&PWM_OFF,sizeof(PWM_OFF));
+ 310   3          //UV=1;
+ 311   3      
+ 312   3            OPEN_P=1;
+ 313   3          }
+ 314   2        }
+ 315   1        else if(W_P_uJ[1]==0x00) {
+ 316   2          ZIWAIXIAN_FINISH_FLAG=0;    
+ 317   2          ReadDGUS(W_S_Address,(uint8_t *)&W_P_uJ[0],sizeof(W_P_uJ[0]));
+ 318   2          W_FINISH=W_P_uJ[0]; /*****mJ*****/  
+ 319   2          ReadDGUS(0x2410,(uint8_t *)&PWM_ON,sizeof(PWM_ON));   //Âö³åon
+ 320   2          ReadDGUS(0x2420,(uint8_t *)&PWM_OFF,sizeof(PWM_OFF));
+ 321   2        UV=0;
+ 322   2            if(MODE_Static==0)  //Î´¿ªÆôÏÔÊ¾Ê£ÓàÊ±¼ä
+ 323   2        {
+ 324   3      
+ 325   3          Static_T_Current_mode2();
+ 326   3        }
+ 327   2        
+ 328   2        }
+ 329   1      
+ 330   1      
+ 331   1      //  EA=1;
+ 332   1      }
+ 333          
+ 334          
+ 335          
+ 336          
+ 337          float L_Float = 0.0;
+ 338          u8 first_page_zhiliao=0;
+ 339          u8 first_page_shoudong=0;
+ 340          u8 first_page_lianji=0;
+ 341          void Switch_page()  //ÅÐ¶Ïµ±Ç°Ò³Ãæ
+ 342          {
+ 343   1      EA=0;
+ 344   1          switch(Page_s[1])
+ 345   1        {
+ 346   2          case Page_home: 
+ 347   2          {first_page_zhiliao=0;  
+ 348   3            first_page_shoudong=0;
+ 349   3            first_page_lianji=0;
+ 350   3                      ES2T=0;
+ 351   3                ES2R=0;
+ 352   3            //Ê×Ò³
+ 353   3            MODE=0;
+ 354   3            break;
+ 355   3          }
+ 356   2          
+ 357   2          case Page_qirongjiao:
+ 358   2          {
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 7   
+
+ 359   3            
+ 360   3            MODE=1;BUff_main[0]=0x01;Mode_1_run();
+ 361   3            break;
+ 362   3          }
+ 363   2          
+ 364   2          
+ 365   2          case Page_zhongxin:
+ 366   2          {
+ 367   3            MODE=1;BUff_main[0]=0x02;Mode_1_run();
+ 368   3            break;
+ 369   3          }
+ 370   2          
+ 371   2              
+ 372   2          case Page_quyu:
+ 373   2          {
+ 374   3            MODE=1;BUff_main[0]=0x03;Mode_1_run();
+ 375   3            break;
+ 376   3          }
+ 377   2          
+ 378   2              
+ 379   2          case Page_chengxuhua:
+ 380   2          {
+ 381   3            first_page_zhiliao=0; MODE=3;
+ 382   3            if(chengxu_start==1)  //¿ªÊ¼¼ü°´ÏÂ  
+ 383   3            {
+ 384   4              
+ 385   4              //chengxu_Run();
+ 386   4              
+ 387   4            }
+ 388   3            break;
+ 389   3          }
+ 390   2          
+ 391   2              
+ 392   2          case Page_zhiliao:
+ 393   2          {
+ 394   3            //EA=0;
+ 395   3              MODE = 2;
+ 396   3            Mode_2_run();
+ 397   3      
+ 398   3            if(first_page_zhiliao==0)   //Ã¿´Î½øÈëÒ³Ãæ³õÊ¼»¯ Ã¿´Î½øÈëÖÎÁÆÄ£Ê½Ö»½øÐÐÒ»´Î
+ 399   3            {
+ 400   4        
+ 401   4              first_page_zhiliao=1;   
+ 402   4              Lock_current_page_zengliang(0x02,0x02,0x03,0x02);   //¸øÈý¸ö±äÁ¿ÉÏËø
+ 403   4              Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 404   4              Lock_current_page_zengliang(0x06,0x02,0x07,0x02);
+ 405   4              WriteDGUS(0x2405,(uint8_t *)&icon_exit,sizeof(icon_exit));
+ 406   4              WriteDGUS(0x2415,(uint8_t *)&icon_exit,sizeof(icon_exit));
+ 407   4              WriteDGUS(0x2425,(uint8_t *)&icon_exit,sizeof(icon_exit));
+ 408   4            }
+ 409   3            first_page_shoudong=0;
+ 410   3          //  EA=1;
+ 411   3            break;
+ 412   3          }
+ 413   2          
+ 414   2              
+ 415   2          case Page_shoudong:
+ 416   2          {   
+ 417   3      
+ 418   3            first_page_zhiliao=0;first_page_lianji=0; 
+ 419   3            MODE = 4;
+ 420   3            mode_4_run();
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 8   
+
+ 421   3            
+ 422   3            if(first_page_shoudong==0)    //Ã¿´Î½øÈëÒ³Ãæ³õÊ¼»¯ Ã¿´Î½øÈëÖÎÁÆÄ£Ê½Ö»½øÐÐÒ»´Î
+ 423   3            {   
+ 424   4                ES2T=0;
+ 425   4                ES2R=0;
+ 426   4              first_page_shoudong=1;    
+ 427   4              Lock_current_page_zengliang(0x02,0x02,0x03,0x02);   //¸øÈý¸ö±äÁ¿ÉÏËø
+ 428   4              Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 429   4              Lock_current_page_zengliang(0x06,0x02,0x07,0x02);
+ 430   4              WriteDGUS(0x1460,(uint8_t *)&icon_exit,sizeof(icon_exit));
+ 431   4              WriteDGUS(0x1465,(uint8_t *)&icon_exit,sizeof(icon_exit));
+ 432   4              WriteDGUS(0x1470,(uint8_t *)&icon_exit,sizeof(icon_exit));
+ 433   4            }
+ 434   3      
+ 435   3            break;
+ 436   3          }
+ 437   2          
+ 438   2              
+ 439   2          case Page_lianji:
+ 440   2          {
+ 441   3            first_page_shoudong=0;
+ 442   3            
+ 443   3            if(first_page_lianji==0)
+ 444   3            {
+ 445   4                ES2T=1;
+ 446   4                ES2R=1;
+ 447   4              lianji_run();
+ 448   4              first_page_lianji=1;
+ 449   4            }
+ 450   3              ReadDGUS(0x4600,(uint8_t *)&uart4_open_buff,sizeof(uart4_open_buff));
+ 451   3            //  ReadDGUS(0x1280,(uint8_t *)&(dynamic_static_flag),sizeof(dynamic_static_flag));   //ÅÐ¶ÏÊÇ¾²Ì¬Ê±¼ä »¹
+             -ÊÇ¶¯Ì¬Ê±¼ä
+ 452   3              T5L_HMIslvSub(); //¹¦ÄÜ£ºÔÚÏß¸üÐÂ´¥ÃþÆÁ³ÌÐò
+ 453   3            break;
+ 454   3          }
+ 455   2          
+ 456   2              
+ 457   2          case Page_shezhi:
+ 458   2          {
+ 459   3            first_page_lianji=0;  
+ 460   3            ES2T=0;
+ 461   3            ES2R=0;
+ 462   3            break;
+ 463   3          }
+ 464   2          
+ 465   2              case Page_chengxuhua_JUMP:
+ 466   2          {
+ 467   3            first_page_zhiliao=0; MODE=3;
+ 468   3      //      if(chengxu_start==1)  //¿ªÊ¼¼ü°´ÏÂ  
+ 469   3      //      {
+ 470   3      //        //chengxu_start=0;
+ 471   3      //        chengxu_Run();
+ 472   3      //        
+ 473   3      //      }
+ 474   3            break;
+ 475   3          }
+ 476   2              
+ 477   2              case Page_zhiliao_JUMP:
+ 478   2          {
+ 479   3            MODE = 2;
+ 480   3            Mode_2_run();
+ 481   3          }
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 9   
+
+ 482   2          default:
+ 483   2          {
+ 484   3            
+ 485   3            break;
+ 486   3          }
+ 487   2          
+ 488   2      
+ 489   2          
+ 490   2          
+ 491   2          
+ 492   2        }
+ 493   1        EA=1;
+ 494   1      }
+ 495          
+ 496          
+ 497          u8 UV_FLAG=0;
+ 498          void    t2_isr()
+ 499          {
+ 500   1        /**************ÅÐ¶ÏÊÇ·ñÍ¨¹ýÊ±¼äµÄ¼õÉÙÍê³ÉÁËÕÕÉä£¬ÎªÕÕÉäÍêºó·­Ò³ÖØÐÂ¸³Öµ×ö×¼±¸********/
+ 501   1          if(MODE_1_Finish==1 ||  MODE_2_Finish==1  ||  MODE_4_Finish)    //mode1Í¨¹ýÊ±¼äµÄ±ä»¯½áÊøÁËÕÕÉä 
+ 502   1        {
+ 503   2          if(Page_s[1]!=Page_Lasttime)      //Ò³Ãæ±ä»¯
+ 504   2          {
+ 505   3          //  W_S[1]=0x01;W_P_uJ[1]=0x01;
+ 506   3            if(MODE_1_Finish==1){
+ 507   4      //        Reset_flag=0; //¿ªÊ¼Ê±¼äÍ¬²½
+ 508   4            Draw_Reset();
+ 509   4            //MODE_4_Finish=0;
+ 510   4            W_mJ_XIANSHI=0;
+ 511   4            W_mJ_doing=0;
+ 512   4            T_doing=0;
+ 513   4            MODE_Static=0;      //ÖÃÁã ÏÔÊ¾Î´½øÐÐÕÕÉäÊ±µÄ¶¯Ì¬Êý¾Ý
+ 514   4            MODE_1_Finish=0;    //ÖÃÁã
+ 515   4          //  MODE_2_Finish=0;
+ 516   4              }
+ 517   3              else if(MODE_2_Finish==1&&MODE!=2){     
+ 518   4                //Reset_flag=0; //¿ªÊ¼Ê±¼äÍ¬²½
+ 519   4            Draw_Reset();
+ 520   4        //    MODE_4_Finish=0;
+ 521   4          //  W_mJ_XIANSHI=0;
+ 522   4        //    W_mJ_doing=0;
+ 523   4            T_doing=0;
+ 524   4            MODE_Static=0;      //ÖÃÁã ÏÔÊ¾Î´½øÐÐÕÕÉäÊ±µÄ¶¯Ì¬Êý¾Ý
+ 525   4        //    MODE_1_Finish=0;    //ÖÃÁã
+ 526   4            MODE_2_Finish=0;}
+ 527   3                else if(MODE_4_Finish==1&&MODE!=4){   
+ 528   4      //            Reset_flag=0; //¿ªÊ¼Ê±¼äÍ¬²½
+ 529   4            Draw_Reset();
+ 530   4            MODE_4_Finish=0;
+ 531   4          //  W_mJ_XIANSHI=0;
+ 532   4          //  W_mJ_doing=0;
+ 533   4            T_doing=0;
+ 534   4            MODE_Static=0;      //ÖÃÁã ÏÔÊ¾Î´½øÐÐÕÕÉäÊ±µÄ¶¯Ì¬Êý¾Ý
+ 535   4            //MODE_1_Finish=0;    //ÖÃÁã
+ 536   4          //  MODE_2_Finish=0;
+ 537   4                }
+ 538   3      //      Reset_flag=0; //¿ªÊ¼Ê±¼äÍ¬²½
+ 539   3      //      Draw_Reset();
+ 540   3      //      MODE_4_Finish=0;
+ 541   3      //      W_mJ_XIANSHI=0;
+ 542   3      //      W_mJ_doing=0;
+ 543   3      //      T_doing=0;
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 10  
+
+ 544   3      //      MODE_Static=0;      //ÖÃÁã ÏÔÊ¾Î´½øÐÐÕÕÉäÊ±µÄ¶¯Ì¬Êý¾Ý
+ 545   3      //      MODE_1_Finish=0;    //ÖÃÁã
+ 546   3      //      MODE_2_Finish=0;
+ 547   3          }
+ 548   2        }
+ 549   1        
+ 550   1      
+ 551   1          //LED_S();
+ 552   1        /**************************************Ð´Èëflash±êÖ¾Î»***************************************/    
+ 553   1                  if(norflash_Open_UV_Flag==1)  //¿ª»ú
+ 554   1            {
+ 555   2              norflash_Open_UV_Flag=0;
+ 556   2              norflash_Write_Open_UV();
+ 557   2      
+ 558   2            }
+ 559   1            
+ 560   1            else if(norflash_Close_UV_Flag==1)//ÔÝÍ£
+ 561   1            {
+ 562   2      
+ 563   2              norflash_Close_UV_Flag=0;
+ 564   2              norflash_Write_Close_UV();
+ 565   2      
+ 566   2            }
+ 567   1                else if(norflash_Stop_UV_Flag==1)//¸´Î»
+ 568   1            {
+ 569   2              norflash_Stop_UV_Flag=0;
+ 570   2                norflash_Write_Stop_UV();
+ 571   2              }
+ 572   1            
+ 573   1              else{
+ 574   2        norflash_Guanji_flag_5s++;  //10sÐ´ÈëÒ»´Î¹Ø»úÊ±¼ä
+ 575   2        if(norflash_Guanji_flag_5s>=20)
+ 576   2        {
+ 577   3          norflash_Guanji_flag_5s=0;
+ 578   3          norflash_Write_guanji();
+ 579   3          
+ 580   3        }
+ 581   2      }
+ 582   1        
+ 583   1      
+ 584   1            if(Screen_set_Time_min!=0)
+ 585   1          {
+ 586   2            Screen_review();
+ 587   2          }
+ 588   1        /**********³õÊ¼»¯***********/
+ 589   1            if(test<=24)
+ 590   1          {
+ 591   2            test++;
+ 592   2          }
+ 593   1                if(test==12)
+ 594   1        {
+ 595   2        
+ 596   2            Init_Adress();//flashµØÖ·³õÊ¼»¯ ±ØÐëµÈ´ý3sºó ÒòÎª´ËÊ±RTC³õÊ¼»¯Íê³É£¬Ð´Èë¿ª»úµÄÊ±¼äÎªÓÐÐ§Öµ
+ 597   2          open_sudo_Init();   //¿ª»ú×Ô¶¯Æô¶¯³õÊ¼»¯
+ 598   2          
+ 599   2        }
+ 600   1        else if(test==20){sudo_click_start();}//Ä£Äâµã»÷ ¿ªÊ¼ÕÕÉä
+ 601   1      }
+ 602          /*****************************************************************************
+ 603          Ö÷º¯Êý*/
+ 604          
+ 605          void main(void)
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 11  
+
+ 606          {
+ 607   1      
+ 608   1            InitCPU();
+ 609   1            Init_Rtc(); //rtc
+ 610   1            JumpPage(0x14); //Ìø×ªµ½logo
+ 611   1            WriteDGUS(0x4620,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 612   1            WriteDGUS(0x4873,(uint8_t *)&(colour_w),sizeof(colour_w));//³ÌÐò»¯Ä£Ê½ Ñ¡ÖÐ±äÉ«³õÊ¼»¯
+ 613   1          
+ 614   1            Screen_Init();    //ÆÁÄ»±³¹â³õÊ¼»¯
+ 615   1            led_register();//´®¿ÚÃüÁî³õÊ¼»¯
+ 616   1          
+ 617   1            T5L_HMIslvInit(); //´®¿ÚÏÂÔØ³ÌÐòÐ­Òé³õÊ¼»¯
+ 618   1      
+ 619   1            chengxu_Init();//³ÌÐò»¯Ä£Ê½³õÊ¼»¯ ´Óflash¶ÁÈ¡Êý¾Ý²¢ÇÒÐ´Èë
+ 620   1            //ReadDGUS(0x1280,(uint8_t *)&(dynamic_static_flag),sizeof(dynamic_static_flag));   //ÅÐ¶ÏÊÇ¾²Ì¬Ê±¼ä »¹Ê
+             -Ç¶¯Ì¬Ê±¼ä
+ 621   1            //open_sudo_Init();
+ 622   1        
+ 623   1        //Ô¤ÏÈ ÔÚÆøÈÜ½ºÄ£Ê½³öÏÖ°´¼ü
+ 624   1            WriteDGUS(0x5105,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 625   1        //Ô¤Ñ¡ ÖÐÐÄÏû¶¾
+ 626   1            WriteDGUS(0x5106,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 627   1        //Ô¤Ñ¡ ÇøÓòÏû¶¾
+ 628   1              WriteDGUS(0x5107,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 629   1        EA=1;
+ 630   1        while(1)
+ 631   1        {
+ 632   2          zhexian_Draw(); //»­Ïß¼ì²â
+ 633   2        
+ 634   2          if(Wait_Count_2==1)//500msÑ­»·Ò»´Î
+ 635   2          {
+ 636   3            
+ 637   3            ReadDGUS(0x14,(uint8_t *)&Page_s,sizeof(Page_s));
+ 638   3            LED_jiguang_Check();
+ 639   3            Wait_Count_2=0;
+ 640   3            
+ 641   3                WriteDGUS(0x5200, (uint8_t *)&test_error[0],sizeof(test_error[0]));   
+ 642   3          
+ 643   3              if(Off_On_pwm_flag==0 ||  UV_St==0)   //ÊÜPWMµÄÓ°Ïì 1Ê±ÊÇÐÝÏ¢×´Ì¬ 0Îª¹¤×÷×´Ì¬
+ 644   3            {
+ 645   4              EA=0;
+ 646   4              L_mm_TO_P_mw(L_int);l_mode2=L_int/10;
+ 647   4              EA=1;
+ 648   4            }   
+ 649   3            else if(MODE!=1 ||  UV_St==1){ change_P_mW=-1;  change_P_mW_doing=0.0;  }   
+ 650   3            
+ 651   3            Switch_page();
+ 652   3            if(MODE!=3){shangchuan();}    
+ 653   3      
+ 654   3            if(BUff_main[1]==0){UV=0;}//STOP
+ 655   3      
+ 656   3            
+ 657   3            L_Float = (float)(L_int/1000.00f);  //mÊý¾Ý
+ 658   3            WriteDGUS(TOF_Address_H, (uint8_t *)&L_Float,sizeof(L_Float));  
+ 659   3            
+ 660   3                      WriteDGUS(0x5200, (uint8_t *)&test_error[1],sizeof(test_error[1]));   
+ 661   3            EA=1;
+ 662   3            /*************************************Ò³Ãæ±ä»¯ÖØÖÃº¯Êý************************************
+ 663   3        ËµÃ÷£ºÈôÔÚÍ¨¹ýÊ±¼ä±ä»¯½áÊøÁËÕÕÉäµÄÇé¿öÏÂ£¬½øÐÐ·­Ò³µÄ¹¦ÄÜ»áµ¼ÖÂµ±Ç°Íê³É×´Ì¬ÏÂµÄÊý¾ÝÈ«²¿ÖØÖÃ
+ 664   3        *******************************************************************************************/
+ 665   3      
+ 666   3      //    if(MODE_Static==0)  //Î´¿ªÆôÏÔÊ¾Ê£ÓàÊ±¼ä
+C51 COMPILER V9.59.0.0   MAIN                                                              05/07/2025 16:35:25 PAGE 12  
+
+ 667   3      ////  {
+ 668   3      //  //  if(Reset_flag==0)   //ÒÑÞôÏÂ¸´Î»¼ü£¬Í¬²½Ê£ÓàÊ±¼äºÍ×ÜÊ±¼ä
+ 669   3      //    {
+ 670   3      //      //EA=0;
+ 671   3      //        Static_T_Current_mode4();
+ 672   3      //        Static_T_Current_mode2();
+ 673   3      //        Static_T_Current_mode1();
+ 674   3      //    //  EA=1;
+ 675   3      //    }
+ 676   3      //  }
+ 677   3      /*********************************************************************************************************
+             -*****/    
+ 678   3      
+ 679   3      } 
+ 680   2          Clock();
+ 681   2          HandleProc();   
+ 682   2      
+ 683   2      
+ 684   2      
+ 685   2        }
+ 686   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2942    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     99      14
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      5    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

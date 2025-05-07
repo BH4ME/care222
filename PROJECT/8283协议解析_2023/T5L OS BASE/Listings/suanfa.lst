@@ -1,0 +1,581 @@
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SUANFA
+OBJECT MODULE PLACED IN .\Objects\suanfa.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\suanfa.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.
+                    -\Listings\suanfa.lst) TABS(2) OBJECT(.\Objects\suanfa.obj)
+
+line level    source
+
+   1          #include "T5LOS8051.H"
+   2          #include "sys.h"
+   3          #include "handle.h"
+   4          #include <stdio.h>
+   5          #include "math.h"
+   6          #include "mode_p.h"
+   7          
+   8          uint L_suanfa[10]={0,0,0};
+   9          uint L_i=0;
+  10          uint16_t L_s2[10]={0,0,0};
+  11          uint16_t L_q[10]={0,0,0};
+  12          uint L_3FLAG=0;
+  13          bit L_ARRAY_FINISH=0;   /****0Î´Íê³É*****/
+  14          
+  15          double sum = 0;//ÇóºÍ
+  16          uint array[4] = {0.0,0.0,0.0,0.0};
+  17          int length = 0;//Êý×é³¤¶È
+  18          double average = 0;//ÇóÆ½¾ùÊý
+  19          double var = 0.0; //Çó·½²î
+  20          double standard = 0; //Çó±ê×¼²î
+  21          
+  22          
+  23          bit shuju_change=0;   /****0Î´±ä¸üÊý¾Ý******/
+  24          
+  25          uint L_FINISH=0;
+  26          
+  27          uint T_06S=0;
+  28          uint jiaoyan[9] = {0.0,0.0,0.0,0.0,0.0};
+  29          double change_P_mW=0.0;
+  30          float change_P_mW_doing=0.0;
+  31          double change_P_mW_First=0.0;
+  32          u16 attend_sp_error  =0x4610;
+  33          
+  34          u16  attend_sp_min_0 =0x2800;
+  35          u16 attend_sp_sec_0  =0x2805;
+  36          u16  attend_sp_min_1 =0x2820;
+  37          u16 attend_sp_sec_1  =0x2825;
+  38          u16  attend_sp_0 =0x1710;
+  39          u16 attend_sp_1  =0x1810;u8 exit_sp[2]={0xff,0x00};
+  40          
+  41          
+  42          //Òç³ö
+  43           bit error_flag;
+  44          //u72 abbbb;
+  45          void shujuchuli(void);
+  46          void shuju_bianliang_chongzhi(void);
+  47          
+  48          
+  49          void TIM0_suanfa_isr(void)
+  50          {
+  51   1        EA=0;
+  52   1        L_ARRAY_FINISH=0;
+  53   1        L_suanfa[L_i]=L_int;
+  54   1        
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 2   
+
+  55   1        if(L_3FLAG>=2)          /***********flag=2,i=2****/
+  56   1      {
+  57   2          
+  58   2            switch(L_i)
+  59   2        {
+  60   3          case 0:
+  61   3          {
+  62   4            array[0]=L_suanfa[2]/10;
+  63   4            array[1]=L_suanfa[3]/10;
+  64   4            array[2]=L_suanfa[0]/10;
+  65   4            L_ARRAY_FINISH=1;
+  66   4            break;
+  67   4          }
+  68   3          case 1:
+  69   3          {
+  70   4            array[0]=L_suanfa[3]/10;
+  71   4            array[1]=L_suanfa[0]/10;
+  72   4            array[2]=L_suanfa[1]/10;
+  73   4          L_ARRAY_FINISH=1;
+  74   4            break;
+  75   4          }
+  76   3              case 2:
+  77   3          {
+  78   4            array[0]=L_suanfa[0]/10;
+  79   4            array[1]=L_suanfa[1]/10;
+  80   4            array[2]=L_suanfa[2]/10;
+  81   4          L_ARRAY_FINISH=1;
+  82   4            break;
+  83   4          }
+  84   3              case 3:
+  85   3          {
+  86   4        L_ARRAY_FINISH=1;
+  87   4            array[0]=L_suanfa[1]/10;
+  88   4            array[1]=L_suanfa[2]/10;
+  89   4            array[2]=L_suanfa[3]/10;
+  90   4            break;
+  91   4          }
+  92   3          default:
+  93   3          {
+  94   4            
+  95   4          }
+  96   3        }
+  97   2        
+  98   2        shujuchuli();
+  99   2      }
+ 100   1      
+ 101   1      
+ 102   1        if(L_i>=3) {L_i=0;}   /***È¡0~4¾Å×é×ÓÊý¾Ý×é³ÉÈý×é¸¸Êý¾Ý****/
+ 103   1        else {L_i++;L_3FLAG++;}
+ 104   1      //  EA=1;
+ 105   1      
+ 106   1      }
+ 107          
+ 108          ///****************array cm**********Êý¾Ý´¦Àí****¸ù¾ÝËùµÃ³öµÄÊý¾ÝÅÐ¶ÏÊÇ·ñÐèÒª¸ü¸ÄÊ±¼ä***********/
+ 109          void shujuchuli(void)
+ 110              {
+ 111   1            int a=0;
+ 112   1            int i=0;
+ 113   1            int j=0;
+ 114   1            double average_jiaoyan=0.0;
+ 115   1            double var_jiaoyan=0.0;
+ 116   1      //      EA=0;
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 3   
+
+ 117   1            if(L_ARRAY_FINISH==1)       /****½ÓÊÜÊý¾Ýµ½ARRAYÍê³É ½øÐÐÊý¾Ý·ÖÎöÊÇ·ñ¸ü¸ÄÊ±¼ä****/
+ 118   1            {
+ 119   2            //shuju_bianliang_chongzhi();
+ 120   2              for ( i = 0; i <= 2;i++)
+ 121   2              {
+ 122   3                  sum += array[i];//ÇóºÍ
+ 123   3              }
+ 124   2       
+ 125   2              length = 3;//ÇóÊý×é³¤¶È
+ 126   2              average = sum / length;//ÇóÆ½¾ùÖµ
+ 127   2       
+ 128   2              for ( j = 0; j <= 2;j++)
+ 129   2              {
+ 130   3                  var += pow(array[j]-average,2)/length;//Çó·½²î
+ 131   3              }
+ 132   2          
+ 133   2              //standard = pow(var,0.5);//Çó±ê×¼²î
+ 134   2              //a=var;
+ 135   2              
+ 136   2              if(var<=3)
+ 137   2              {
+ 138   3                shuju_change=0;     /*********Êý¾Ý²»±ä»¯£¬²»ÐèÒª×÷³ö·´Ó¦******/
+ 139   3                //jiaoyan[T_06S]=L_int;
+ 140   3                //T_06S++;
+ 141   3        //        if(T_06S>=8)
+ 142   3      //          {
+ 143   3      //              average_jiaoyan=(jiaoyan[0]+jiaoyan[8])/2;
+ 144   3      //            var_jiaoyan = pow(jiaoyan[0]-average_jiaoyan,2)/2+pow(jiaoyan[8]-average_jiaoyan,2)/2;
+ 145   3      //            if(var_jiaoyan>=2)
+ 146   3      //            {shuju_change=1;  L_FINISH = L_int;}
+ 147   3      //            T_06S=0;
+ 148   3      //          }
+ 149   3              }
+ 150   2              else {shuju_change=1; Mode_p_work();
+ 151   3                //L_FINISH = array[2]*10;
+ 152   3              //T_06S=0;
+ 153   3                }
+ 154   2              
+ 155   2            //  shuju_bianliang_chongzhi();
+ 156   2         
+ 157   2      //        printf("sum = %g\n",sum);//Õâ±ß´òÓ¡Ò²¿ÉÒÔÊ¹ÓÃprintf("%f\n",sum);ÕâÖÖ´òÓ¡Ä¬ÈÏ³öÀ´µÄÊýÊÇÐ¡Êýµãºó6Î
+             -»
+ 158   2      //        printf("length of array[4] = %d\n",length);
+ 159   2      //        printf("average = %g\n",average);
+ 160   2      //        printf("var = %g\n",var);
+ 161   2      //        printf("standard = %g\n",standard);
+ 162   2              
+ 163   2              
+ 164   2              
+ 165   2            }
+ 166   1            
+ 167   1            
+ 168   1      //      if(shuju_change==1)
+ 169   1      //      {
+ 170   1      //        if(MODE_Static==2)
+ 171   1      //        {}
+ 172   1      ////        else if(MODE_Static==1)
+ 173   1      ////        {Mode_s_work();}
+ 174   1      //      }
+ 175   1            
+ 176   1            EA=1;
+ 177   1      
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 4   
+
+ 178   1          }
+ 179          void shuju_bianliang_chongzhi(void)
+ 180          {
+ 181   1        sum=0.0;
+ 182   1        standard=0.0;
+ 183   1        var=0.0;
+ 184   1        average=0.0;shuju_change=0;
+ 185   1      }
+ 186          
+ 187          
+ 188          /*********************************************¸ø³ö¾àÀëËã³ö¹¦ÂÊ*************************************/
+ 189          //void L_mm_TO_P_mw(uint L_mm_TO_P)
+ 190          //{
+ 191          //  uint L_mm_TO_P_mw_FLAG=0;
+ 192          //    double BEISHU=0.000;
+ 193          //  double L_CM;
+ 194          //  double P_mW_50CM=8.36;  
+ 195          //  double P_mW_100CM=3.2;  
+ 196          //  double P_mW_1500CM=0.930; 
+ 197          //  double P_mW_200CM=0.520;  
+ 198          //L_CM=L_mm_TO_P/10;
+ 199          //  
+ 200          //  if(L_CM<50  && L_CM>=10) L_mm_TO_P_mw_FLAG=1;
+ 201          //  else if(L_CM>=50 && L_CM<100 )  L_mm_TO_P_mw_FLAG=2;
+ 202          //    else if(L_CM>=100 && L_CM<150 ) L_mm_TO_P_mw_FLAG=3;
+ 203          //      else if(L_CM>=150 && L_CM<=400) L_mm_TO_P_mw_FLAG=4;
+ 204          //  else if(L_CM<=10) L_mm_TO_P_mw_FLAG=6;
+ 205          //  else if(L_CM>=400)L_mm_TO_P_mw_FLAG=7;
+ 206          //        else L_mm_TO_P_mw_FLAG=5;
+ 207          //  
+ 208          //  
+ 209          //  switch(L_mm_TO_P_mw_FLAG)
+ 210          //  {
+ 211          //    case 1:
+ 212          //    {
+ 213          //      BEISHU=50.00/L_CM;
+ 214          //      BEISHU=BEISHU*BEISHU;
+ 215          //      change_P_mW_doing=P_mW_50CM*BEISHU;
+ 216          //      break;
+ 217          //    }
+ 218          //    case 2:
+ 219          //    { 
+ 220          //      double P_uW=0.0;
+ 221          //      double L_M=0.0;
+ 222          //      L_M = L_mm_TO_P/1000.0;
+ 223          //      L_M=L_M*(1.92);
+ 224          //      P_uW=1.0/(exp(L_M));
+ 225          //      P_uW=21.84*P_uW;    /***60cm 6.67**/
+ 226          //      change_P_mW_doing=P_uW;
+ 227          
+ 228          //      break;
+ 229          //    }
+ 230          //        case 3:
+ 231          //    {
+ 232          
+ 233          //      double P_uW=0.0;
+ 234          //      double L_M=0.0;
+ 235          //      L_M = L_mm_TO_P/1000.0;
+ 236          //      L_M=L_M*(2.47);
+ 237          //      P_uW=1.0/(exp(L_M));
+ 238          //      P_uW=37.89*P_uW;    
+ 239          //      change_P_mW_doing=P_uW;
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 5   
+
+ 240          //      break;
+ 241          //    }
+ 242          //        case 4:
+ 243          //    {
+ 244          //  
+ 245          //      BEISHU=L_CM/150.0;
+ 246          //      BEISHU=BEISHU*BEISHU;
+ 247          //      change_P_mW_doing=P_mW_1500CM/BEISHU;
+ 248          //      break;
+ 249          //    }
+ 250          //        case 5:
+ 251          //    {
+ 252          //      
+ 253          //  
+ 254          //      break;
+ 255          //    }
+ 256          //    
+ 257          //            case 6:
+ 258          //    {
+ 259          //      
+ 260          //  change_P_mW_doing=200;
+ 261          //      break;
+ 262          //    }
+ 263          //    
+ 264          //            case 7:
+ 265          //    {
+ 266          //        change_P_mW_doing=0.13;
+ 267          //  
+ 268          //      break;
+ 269          //    }
+ 270          //    default:
+ 271          //    {
+ 272          //      L_mm_TO_P_mw_FLAG=0x0a;
+ 273          //    }
+ 274          //  }
+ 275          //    change_P_mW_First=change_P_mW_doing/1000;   //uw±ämw
+ 276          //  //change_P_mW=((log(change_P_mW))+2)*13;  //ÊµÊ±ÇúÏß W119,H98,Y_Cectral 291,VD50,×ÝÖá·Å´ó±¶Êý256£¬¼ä¾à1Ê
+             -ý¾ÝÔ´Í¨µÀ0
+ 277          //  change_P_mW=log10(change_P_mW_doing);
+ 278          //  P_FINISH=change_P_mW_First;
+ 279          //}
+ 280          /**********************************
+ 281          change_P_mW_First ÊÇ¶¯Ì¬µÄÕæÊµmW
+ 282          change_P_mW ¶¯Ì¬ÕæÊµµÄlogºóµÄuW
+ 283          ***********************************/
+ 284          void L_mm_TO_P_mw(uint L_mm_TO_P)
+ 285          {
+ 286   1        uint L_mm_TO_P_mw_FLAG=0;
+ 287   1          double BEISHU=0.00000;
+ 288   1        double L_CM;
+ 289   1      //  double P_mW_50CM=8.36;  
+ 290   1      //  double P_mW_100CM=3.2;  
+ 291   1      //  double P_mW_1500CM=0.930; 
+ 292   1      //  double P_mW_200CM=0.520;
+ 293   1      
+ 294   1          double mihanshu=0.0;
+ 295   1      L_CM=L_mm_TO_P/10;
+ 296   1        
+ 297   1        if(L_CM<=10&& L_CM>=5) L_mm_TO_P_mw_FLAG=1;
+ 298   1          else  if(L_CM<=20&& L_CM>10) L_mm_TO_P_mw_FLAG=2;
+ 299   1            else  if(L_CM<=100&& L_CM>20) L_mm_TO_P_mw_FLAG=3;
+ 300   1            else  if(L_CM<=300&& L_CM>100) L_mm_TO_P_mw_FLAG=4;
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 6   
+
+ 301   1              else L_mm_TO_P_mw_FLAG=5;
+ 302   1        
+ 303   1        /***66300.18x^-1.86****/
+ 304   1        switch(L_mm_TO_P_mw_FLAG)
+ 305   1        {
+ 306   2          case 1:
+ 307   2          {
+ 308   3      //      mihanshu = pow((double)(L_CM),1.86);
+ 309   3      //      BEISHU = 66300.18/mihanshu;
+ 310   3      //      change_P_mW_doing=BEISHU;
+ 311   3            mihanshu = pow((double)(L_CM),-1.6);
+ 312   3            BEISHU = 36527.86*mihanshu;
+ 313   3            change_P_mW_doing=BEISHU;
+ 314   3            break;
+ 315   3          }
+ 316   2          
+ 317   2          
+ 318   2              case 2:
+ 319   2          {
+ 320   3            mihanshu = pow((double)(L_CM),-1.85);
+ 321   3            BEISHU = 65617.44*mihanshu;
+ 322   3            change_P_mW_doing=BEISHU;
+ 323   3            break;
+ 324   3          }
+ 325   2          
+ 326   2              case 3:
+ 327   2          {
+ 328   3            mihanshu = pow((double)(L_CM),-1.81);
+ 329   3            BEISHU = 57622.25*mihanshu;
+ 330   3            change_P_mW_doing=BEISHU;
+ 331   3            break;
+ 332   3          }
+ 333   2          
+ 334   2              case 4:
+ 335   2          {
+ 336   3            mihanshu = pow((double)(L_CM),-2);
+ 337   3            BEISHU = 139224.07*mihanshu;
+ 338   3            change_P_mW_doing=BEISHU;
+ 339   3            break;
+ 340   3          }
+ 341   2          
+ 342   2          
+ 343   2          default:
+ 344   2          {
+ 345   3            L_mm_TO_P_mw_FLAG=0x0a;
+ 346   3          }
+ 347   2        }
+ 348   1          if(W_S[0]!=2&&MODE==1)change_P_mW_doing=change_P_mW_doing*0.6;
+ 349   1          change_P_mW_First=change_P_mW_doing/1000;   //uw±ämw
+ 350   1        //if(MODE==2) P_FINISH=change_P_mW_doing/1000.000;    //±ä³Éuw
+ 351   1        //change_P_mW=((log(change_P_mW))+2)*13;  //ÊµÊ±ÇúÏß W119,H98,Y_Cectral 291,VD50,×ÝÖá·Å´ó±¶Êý256£¬¼ä¾à1Êý¾
+             -ÝÔ´Í¨µÀ0
+ 352   1        change_P_mW=log10(change_P_mW_doing);
+ 353   1        P_FINISH=change_P_mW_First;//uw±ämw
+ 354   1      }
+ 355          
+ 356          
+ 357          /*********************×´Ì¬µÆ*****************
+ 358          ËµÃ÷£º1£©ÔÚUIÉÏÏÔÊ¾£¬ÈôÃ»ÓÐÕýÔÚ½øÐÐµÄÈÎÎñÔòÏÔÊ¾¿Õ°×
+ 359            Èô¿ªÊ¼Æô¶¯³ÌÐòµ«ÊÇUVÎª¿ª£¬¼´ÏÔÊ¾ÂÌµã
+ 360            ÈôUV¿ªÔòÏÔÊ¾ºìµã
+ 361          
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 7   
+
+ 362            2£©Ö¸Ê¾µÆ£ºÈôÆô¶¯³ÌÐòÔòÏÔÊ¾ÂÌµÆ£¬ÈôUV¿ªÏÔÊ¾ºìµÆ Á½¸ö¼æÈÝ
+ 363          
+ 364            3£©¼¤¹â£º³ýÁËÊ×Ò³¡¢ÉèÖÃ½çÃæ¡¢Á¬½Ó½çÃæ£¬ÆäËû½çÃæ¿ªÊ¼Ç°¶¼¿ªÆô£¬
+ 365            ÈôÆÁÄ»±³¹â´ò¿ª£¬Ôò¹Ø±Õ¼¤¹â
+ 366          *******************************************/
+ 367          //bit jiguang_flag=0  //0±íÊ¾Î´¿ªÆô¼´Òª¹Ø±Õ¼¤¹â 1±íÊ¾¿ªÆô¼¤¹â
+ 368          u8 start_first_flag=0;  //Ö»ÓÐ¸´Î»ºÍ×Ô¶¯Íê³ÉµÄÇé¿öÏÂ »áÖÃÎ»
+ 369          void LED_jiguang_Check()
+ 370          {
+ 371   1        u8 ui[2];
+ 372   1      
+ 373   1        static u8 work_uv[2]={0,0x2};
+ 374   1        static u8 work_start[2]={0,0x1};
+ 375   1        static bit shandong_flag=0;
+ 376   1        EA=0;
+ 377   1        if(Page_s[1]!=Page_home &&Page_s[1]!=Page_lianji  &&Page_s[1]!=Page_shezhi  )
+ 378   1        {
+ 379   2          //UI
+ 380   2          ReadDGUS(0x3010,(uint8_t *)&ui,sizeof(ui));
+ 381   2          if(UV_St==1&&ui[1]==0x01&&Page_s[1]==Page_chengxuhua_JUMP)start_first_flag=1;
+ 382   2          if(UV_St==0&&ui[1]==0x01  ) //uv work
+ 383   2          {
+ 384   3            start_first_flag=1;
+ 385   3            WriteDGUS(0x1700,(uint8_t *)&work_uv,sizeof(work_uv));
+ 386   3            LED_B=1; LED_G=0;
+ 387   3          }
+ 388   2          else if(UV_St==1&&ui[1]==0x01)  {LED_B=0; LED_G=1;WriteDGUS(0x1700,(uint8_t *)&work_start,sizeof(work_sta
+             -rt));}
+ 389   2          else if(ui[1]==0x00&&UV_St==1&&start_first_flag==0){LED_B=0; LED_G=0;WriteDGUS(0x1700,(uint8_t *)&icon_e
+             -xit,sizeof(icon_exit));}
+ 390   2          else if(start_first_flag==1&&ui[1]==0x00)
+ 391   2          {
+ 392   3            if(shandong_flag==0)
+ 393   3            {shandong_flag=~shandong_flag;
+ 394   4          LED_B=0; LED_G=1;WriteDGUS(0x1700,(uint8_t *)&work_start,sizeof(work_start));
+ 395   4            }
+ 396   3            else {shandong_flag=~shandong_flag;LED_B=0; LED_G=0;WriteDGUS(0x1700,(uint8_t *)&icon_exit,sizeof(icon_
+             -exit));}
+ 397   3          }
+ 398   2          //else {}
+ 399   2        //  if(UV_St==1)LED_B=0;
+ 400   2          
+ 401   2      //    
+ 402   2      //    if(ui[1]==0x01) //¿ªÆô
+ 403   2      //    {
+ 404   2      //      LED_G=1;
+ 405   2      //    }
+ 406   2      //    else LED_G=0;
+ 407   2          
+ 408   2          
+ 409   2          if(Screen_Touch_flag==0 && Screen_Time_500ms<=60) //30s
+ 410   2          {
+ 411   3            JIGUANG=1;
+ 412   3          }else JIGUANG=0;
+ 413   2            
+ 414   2        }
+ 415   1        else {JIGUANG=0;LED_B=0; LED_G=0;UV=0;}
+ 416   1        EA=1;
+ 417   1      }
+ 418          
+ 419          /********************Âö³å***********************
+ 420          ËµÃ÷£ºt²»¼ä¶ÏÕÕÉäÊ±¼ä   onÉÏÉýÑØ  offÏÂ½µÑØ   T×Ü¹²ÐèÒªÊ±¼ä   T1ÖÜÆÚ1 T2
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 8   
+
+ 421          
+ 422          1.t%on!=0   ÔòT=(t/on)*(on+off)+t%on
+ 423          2.t%on==0   T=(t/on-1)*(on+off)+on
+ 424          Àý ²»¼ä¶ÏÕÕÉä10s ÉÏÉýÑØ1s ÏÂ½µÑØ100s ,¼ÆËã 
+ 425          ***********************************************/
+ 426          uint maichong_suanfa(uint T,u8 on,u8 off) //ÊäÈë ²»¼ä¶ÏÕÕÉäµÄÊ±¼ä
+ 427          {
+ 428   1        uint T2;
+ 429   1        uint T1;
+ 430   1        uint T3;
+ 431   1      //EA=0;
+ 432   1        if(MODE==2  ||  MODE==4)    
+ 433   1        {
+ 434   2          T2=T%on;
+ 435   2          T3=T/on;
+ 436   2          if(T2!=0)
+ 437   2          {
+ 438   3            T1=T3*(on+off);
+ 439   3            if(T1/(on+off)!=T3){yichu_T=1;return 1;}
+ 440   3            T1+=T2;yichu_T=0;
+ 441   3            //ÅÐ¶ÏÒç³ö 
+ 442   3            
+ 443   3            //if((T1+T2)>=0xef10){yichu_T=1;return 0;}
+ 444   3      
+ 445   3      
+ 446   3            return T1;
+ 447   3          }
+ 448   2          else
+ 449   2          {
+ 450   3            
+ 451   3            
+ 452   3            T1=(T3-1)*(on+off);
+ 453   3            if(T1/(on+off)!=(T3-1)){yichu_T=1;return 1;}
+ 454   3            
+ 455   3            T1+=on;yichu_T=0;
+ 456   3            
+ 457   3            //if((T1+on)>=0xef10){yichu_T=1;return 0;}
+ 458   3            
+ 459   3            return T1;
+ 460   3          }
+ 461   2          
+ 462   2        }
+ 463   1        return T;
+ 464   1      //EA=1;
+ 465   1      }
+ 466          
+ 467          
+ 468          uint mode4_maichong(uint T,uint on,uint off)
+ 469          {
+ 470   1        
+ 471   1        uint t1;
+ 472   1        uint t2;
+ 473   1        
+ 474   1        t1=T/(on+off);
+ 475   1        
+ 476   1        if(t1==0)//²»µ½Ò»¸öÖÜÆÚ
+ 477   1        {
+ 478   2          if(T>=on) return on;
+ 479   2          else return T;
+ 480   2        }
+ 481   1        else 
+ 482   1        {
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 9   
+
+ 483   2          t2=t1-(t1*(on+off));
+ 484   2          if(t2>=on)  return (t1*on+on);
+ 485   2            else return (t1*on+t2);
+ 486   2        }
+ 487   1        return 0;
+ 488   1      }
+ 489          
+ 490          
+ 491          void yichu_run()
+ 492          {
+ 493   1        
+ 494   1              if(yichu_T==1)  //6¸öÈ«²¿ÏûÊ§ ³öÏÖerror
+ 495   1          {
+ 496   2            error_flag=1;
+ 497   2            WriteDGUS(0x1720,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 498   2            WriteDGUS(0x4630,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 499   2            WriteDGUS(0x4640,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 500   2            
+ 501   2            WriteDGUS(0x4650,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 502   2            WriteDGUS(0x4660,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 503   2            WriteDGUS(0x1820,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 504   2            
+ 505   2            WriteDGUS(0x4620,(uint8_t *)&(attend_sp_error),sizeof(attend_sp_error));
+ 506   2          }
+ 507   1          
+ 508   1          else 
+ 509   1          {WriteDGUS(0x1820,(uint8_t *)&(exit_sp),sizeof(exit_sp));}
+ 510   1      
+ 511   1      }
+ 512          
+ 513          void yichu_set()
+ 514          {
+ 515   1        
+ 516   1        if(error_flag==1&&yichu_T==0)
+ 517   1      {
+ 518   2        error_flag=0;
+ 519   2            WriteDGUS(0x1720,(uint8_t *)&(attend_sp_0),sizeof(attend_sp_0));
+ 520   2            WriteDGUS(0x4630,(uint8_t *)&(attend_sp_min_0),sizeof(attend_sp_min_0));
+ 521   2            WriteDGUS(0x4640,(uint8_t *)&(attend_sp_sec_0),sizeof(attend_sp_sec_0));
+ 522   2            
+ 523   2            WriteDGUS(0x4650,(uint8_t *)&(attend_sp_sec_1),sizeof(attend_sp_sec_1));
+ 524   2            WriteDGUS(0x4660,(uint8_t *)&(attend_sp_min_1),sizeof(attend_sp_min_1));
+ 525   2            WriteDGUS(0x1820,(uint8_t *)&(attend_sp_1),sizeof(attend_sp_1));
+ 526   2            
+ 527   2            WriteDGUS(0x4620,(uint8_t *)&(exit_sp),sizeof(exit_sp));
+ 528   2      }
+ 529   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2642    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    145      46
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V9.59.0.0   SUANFA                                                            05/07/2025 16:35:26 PAGE 10  
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,538 @@
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MODE_P
+OBJECT MODULE PLACED IN .\Objects\mode_p.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\mode_p.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.
+                    -\Listings\mode_p.lst) TABS(2) OBJECT(.\Objects\mode_p.obj)
+
+line level    source
+
+   1          #include "T5LOS8051.H"
+   2          #include "sys.h"
+   3          #include "handle.h"
+   4          //#include<stdio.h>
+   5          #include "math.h"
+   6          #include "mode_p.h"
+   7          #include "suanfa.h"
+   8          #include "start_win.h"
+   9          
+  10          
+  11          uint L_T_FLAG=0;
+  12          double P_mW_T=0.00;
+  13          
+  14          uint l_lasttime;
+  15          
+  16          #define W_Mode_18mJ 18
+  17          double W_18mJ=0.018;
+  18          double W_Mode;
+  19          double W_Static;
+  20          double W_FINISH;
+  21          uint First_shuju_FLAG=0;      /*****0–Ë“™Ω¯––µ⁄“ª¥Œ ˝æ›*****/
+  22          double W_LASTTIME=0.0;
+  23          u8 MODE_2_Finish=0;   //ƒ£ Ω2 ◊‘º∫ ±º‰œ˚∫ƒÕÍ ◊‘∂ØΩ· ¯ 0¥˙±ÌŒ¥Ω· ¯£¨1¥˙±Ì◊‘∂ØΩ· ¯ƒ£ Ω1
+  24              
+  25              u8 MODE_2_RUN_Draw=0; //ƒ£ Ω2 ◊‘º∫œ˚∫ƒÕÍ ±º‰Ω¯–– µ⁄»˝Ãı«˙œﬂª„◊‹«˙œﬂΩ¯––ª≠
+  26            
+  27          
+  28          uint T_FINISH;
+  29          uint ZIWAIXIAN_FINISH_FLAG=0;  /******0Œ™Œ¥ø™∆Ù◊œÕ‚œﬂ********/
+  30          uint T_LASTTIME=0;
+  31          uint T_WORK=0;
+  32          uint T_XIANSHI=0;
+  33          double P_FINISH=1;
+  34          //double P_FINISH=1;
+  35          double P_LASTTIME=1;
+  36          
+  37          uint a=0;
+  38          uint T_Static_MODE2=0;
+  39          uint T_P_First=0;
+  40          
+  41          u8 PWM_ON[2];
+  42          u8 PWM_OFF[2];
+  43          
+  44          uint T_ON_OFF=0;
+  45          uint T_dynamic=0;
+  46          
+  47          u16 dynamic_static_flag=0;  //∂ØÃ¨ ±º‰∫Õæ≤Ã¨ ±º‰µƒ±Í÷æŒª
+  48          void T_jisuan(void);
+  49          void shujuchuli(void);
+  50          void First_shuju(void);
+  51          void Transform_L_T(uint L_T);
+  52          void UART5_isr();
+  53          void TIM0_suanfa_isr();
+  54          void shuju_bianliang_chongzhi(void);
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 2   
+
+  55          void Mode_p_work(void);
+  56          
+  57          void CLOSE_W_bianliangchongzhi(void);
+  58              
+  59              
+  60          
+  61          //    
+  62          ///**********◊™ªª∫Ø ˝** ‰»Îæ‡¿Îmm***◊™ªª≥…À˘–Ë“™µƒπ¶¬ mW******/
+  63          //void Transform_L_T(uint L_T)  /*****¥À ±æ‡¿Î «mmµ•Œª*******/
+  64          //{
+  65          //  
+  66          
+  67          //  P_FINISH=change_P_mW_doing/1000.000;    //±‰≥…uw
+  68          //}
+  69            
+  70          
+  71          void First_shuju(void)
+  72          {
+  73   1        //∏ﬂ◊÷Ω⁄vp
+  74   1            
+  75   1        EA=0;
+  76   1      
+  77   1        if(First_shuju_FLAG==0)
+  78   1        {
+  79   2          MODE_2_RUN_Draw=0;
+  80   2          l_lasttime=l_mode2;
+  81   2         W_Static=W_FINISH;
+  82   2        //  Transform_L_T(L_int);
+  83   2          //T_jisuan();
+  84   2          Static_T_Current_mode2();
+  85   2      
+  86   2          First_shuju_FLAG=1;
+  87   2          T_dynamic=T_All;
+  88   2      //    T_XIANSHI=T_y;
+  89   2      //    T_S_First=T_y;
+  90   2          T_First=T_All;
+  91   2          P_LASTTIME=P_FINISH;
+  92   2          Draw_W_Flag=1;
+  93   2          //T_FINISH=W_Static/P_FINISH;
+  94   2        }
+  95   1      //  EA=1;
+  96   1      }
+  97          
+  98          
+  99          
+ 100          
+ 101          ///*********W=P*T*****************T=W/P*****T_FINISH*******P_mW_T*****P=mW*****W=mJ*/
+ 102          void T_jisuan(void)
+ 103          {
+ 104   1      //  EA=0;
+ 105   1      //  static l_lasttime;
+ 106   1      //  W_LASTTIME=P_LASTTIME*T_WORK;
+ 107   1      //  if(W_Static>=W_LASTTIME)
+ 108   1      //  {
+ 109   1      //    W_Static=W_Static-W_LASTTIME;T_XIANSHI=W_Static/P_FINISH;
+ 110   1      //    T_XIANSHI=maichong_suanfa(T_XIANSHI,PWM_ON[1],PWM_OFF[1]);
+ 111   1      //    T_dynamic=T_XIANSHI+T_doing;
+ 112   1      //    T_WORK=0;
+ 113   1      //  } 
+ 114   1      //  else return;
+ 115   1      //  P_LASTTIME=P_FINISH;
+ 116   1        W_LASTTIME=P_LASTTIME;
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 3   
+
+ 117   1        if(W_Static>=W_LASTTIME)
+ 118   1        {
+ 119   2          W_Static=W_Static-W_LASTTIME;
+ 120   2          if(l_lasttime<=l_mode2-2  ||l_lasttime>=l_mode2+2 )//±‰ªØ
+ 121   2          {
+ 122   3          T_XIANSHI=W_Static/P_FINISH;
+ 123   3          T_XIANSHI=maichong_suanfa(T_XIANSHI,PWM_ON[1],PWM_OFF[1]);
+ 124   3          T_dynamic=T_XIANSHI+T_doing;
+ 125   3          }
+ 126   2        } 
+ 127   1        else return;
+ 128   1        P_LASTTIME=P_FINISH;
+ 129   1        l_lasttime=l_mode2;
+ 130   1      //  EA=1;
+ 131   1      }
+ 132          
+ 133          void Mode_p_work(void)        /***********ºÏ≤‚µΩæ‡¿Î±‰ªØ*******/
+ 134          {
+ 135   1          //  Transform_L_T(L_int);
+ 136   1          //  T_jisuan();
+ 137   1      }
+ 138          
+ 139          uint Off_On_pwm_flag=0; //0±Ì æ’˝‘⁄π§◊˜
+ 140          void TIM0_1S_isr(void)
+ 141          {
+ 142   1      //  EA=0;
+ 143   1        if(dynamic_static_flag) T_jisuan();
+ 144   1      
+ 145   1        if(PWM_OFF[1]!=0  &&T_doing!=0)
+ 146   1        { 
+ 147   2              if(T_ON_OFF>=PWM_ON[1]  &&  Off_On_pwm_flag==0) //π§◊˜ ±º‰µΩ¡À “™Õ£÷ππ§◊˜¡À
+ 148   2          {
+ 149   3            Off_On_pwm_flag=1;
+ 150   3            UV=0;
+ 151   3            T_ON_OFF=0;
+ 152   3          }
+ 153   2      
+ 154   2        else  if(Off_On_pwm_flag==1 &&  T_ON_OFF>=PWM_OFF[1])   //–›œ¢ ±º‰µΩ¡À “™ø™∆Ùπ§◊˜¡À
+ 155   2          {
+ 156   3            Off_On_pwm_flag=0;  
+ 157   3            UV=1;
+ 158   3            T_ON_OFF=0;
+ 159   3          }
+ 160   2          
+ 161   2          
+ 162   2        }
+ 163   1        else //≥£ø™
+ 164   1        {   
+ 165   2            UV=1;
+ 166   2        }
+ 167   1        
+ 168   1        if(Off_On_pwm_flag==0&&MODE_2_Finish==0)
+ 169   1        {
+ 170   2          UV=1;
+ 171   2        }
+ 172   1        
+ 173   1        
+ 174   1              if((UV_St==0&&Off_On_pwm_flag==0)||(Off_On_pwm_flag&&UV_St))
+ 175   1        {
+ 176   2        
+ 177   2        T_doing++;
+ 178   2        T_WORK++;
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 4   
+
+ 179   2        if(T_XIANSHI>0) T_XIANSHI--;
+ 180   2        T_ON_OFF++;
+ 181   2        }
+ 182   1        
+ 183   1        if(T_XIANSHI<=0 ||  T_doing>=T_dynamic)
+ 184   1        {
+ 185   2            JumpPage(Page_zhiliao); MODE_2_Finish=1;  
+ 186   2          //Reset_flag=1;
+ 187   2          
+ 188   2          if(dynamic_static_flag)MODE_2_RUN_Draw=1;
+ 189   2          
+ 190   2          CLOSE_W_bianliangchongzhi();
+ 191   2          
+ 192   2          
+ 193   2        }
+ 194   1        else if(T_doing>=2*T_First)
+ 195   1        {
+ 196   2            Draw_W_Flag=0;
+ 197   2        }
+ 198   1      
+ 199   1      //  EA=1;
+ 200   1      }
+ 201          
+ 202          bit reset_mode2=0;
+ 203          void CLOSE_W_bianliangchongzhi(void)
+ 204          {
+ 205   1        //EA=0;
+ 206   1      //Reset_flag
+ 207   1        if(MODE==2) JumpPage(Page_zhiliao);
+ 208   1        reset_mode2=0;
+ 209   1        W_P_uJ[2]=0x01;P_FINISH=1;P_LASTTIME=1;
+ 210   1        //uchar CLOSE[1]={0x0000};
+ 211   1        ZIWAIXIAN_FINISH_FLAG=0;
+ 212   1        T_FINISH=0;
+ 213   1        T_WORK=0;
+ 214   1        T_XIANSHI=0;
+ 215   1        First_shuju_FLAG=0;
+ 216   1        shuju_change=0;
+ 217   1        L_T_FLAG=0;
+ 218   1        //MODE=0;
+ 219   1        //MODE_Static=0;
+ 220   1        norflash_Close_UV_Flag=1;
+ 221   1        //Work_Time=0;
+ 222   1        UV=0;
+ 223   1        T_P_First=0;
+ 224   1        Draw_W_Flag=0;//Õ£÷πª≠œﬂ
+ 225   1        OPEN_P=0;
+ 226   1          First_Draw_Flag=0;  //ø™∆Ùª≠œﬂ
+ 227   1        W_mJ_XIANSHI=0;
+ 228   1        Off_On_pwm_flag=0;
+ 229   1        //T_doing=0;  //ª≠Ω¯∂»Ãı «Â¡„
+ 230   1        //   Draw_Reset();
+ 231   1        //  Unlock_current_page();
+ 232   1      
+ 233   1          T_ON_OFF=0;
+ 234   1          //T_dynamic=0;
+ 235   1          start_first_flag=0;
+ 236   1          //EA=1;
+ 237   1      }
+ 238          bit yichu_T=0;
+ 239          void Static_T_Current_mode2()
+ 240          {
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 5   
+
+ 241   1        if(MODE==2)
+ 242   1        {
+ 243   2      //    EA=0;
+ 244   2        //  P_FINISH=change_P_mW_doing/1000.000;    //±‰≥…uw
+ 245   2        //Transform_L_T(L_int);
+ 246   2        T_XIANSHI=(W_FINISH/P_FINISH);
+ 247   2          
+ 248   2          //µ⁄“ª¥Œº∆À„“Á≥ˆ
+ 249   2        //if((W_FINISH/P_FINISH)>=0xef10){yichu_T=1;return;}//“Á≥ˆ
+ 250   2          if(PWM_OFF[1]!=0)
+ 251   2          {
+ 252   3            T_XIANSHI=maichong_suanfa(T_XIANSHI,PWM_ON[1],PWM_OFF[1]);
+ 253   3            yichu_run();
+ 254   3          yichu_set();
+ 255   3          }
+ 256   2          else 
+ 257   2          {
+ 258   3            
+ 259   3          }
+ 260   2        T_All=T_XIANSHI;
+ 261   2        T_dynamic=T_All;            //–¥»Î◊‹ ±º‰
+ 262   2        //change_P_mW_doing=P_FINISH;   //–¥»Îπ¶¬ 
+ 263   2      //    EA=1;
+ 264   2        }
+ 265   1      }
+ 266          
+ 267          static struct{
+ 268            u8 Head_set_H;
+ 269            u8 H_mj;
+ 270            u8 H_on;
+ 271            u8 H_off;
+ 272            
+ 273            u8 Head_set_M;
+ 274            u8 M_mj;
+ 275            u8 M_on;
+ 276            u8 M_off;
+ 277            
+ 278            u8 Head_set_L;
+ 279            u8 L_mj;
+ 280            u8 L_on;
+ 281            u8 L_off;
+ 282          
+ 283          }zhiliao_set_nor;
+ 284          
+ 285          void zhiliao_SET()
+ 286          {
+ 287   1        
+ 288   1        uchar MJ_H[4];  //2023 02 18  ƒÍ‘¬»’
+ 289   1                      //0  1  2  3
+ 290   1        u8 MJ_M[4]; //00  12 45 23   ±∑÷√Î
+ 291   1                      //0   1  2  3
+ 292   1        u8  MJ_L[4];
+ 293   1       uchar MJ_H_M_L[12]={0};
+ 294   1      //u8 Nor_buff[10];  //0xf7
+ 295   1        u32 MJ_H_HEX,MJ_L_HEX,MJ_M_HEX;
+ 296   1        
+ 297   1       /***********πÃ∂®Õ∑*************/
+ 298   1      zhiliao_set_nor.Head_set_H=0XF0;
+ 299   1      zhiliao_set_nor.Head_set_M=0XF1;
+ 300   1      zhiliao_set_nor.Head_set_L=0XF2;
+ 301   1      
+ 302   1        ReadDGUS(0X1310,(uint8_t *)&MJ_H,sizeof(MJ_H));
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 6   
+
+ 303   1        ReadDGUS(0X1450,(uint8_t *)&MJ_M,sizeof(MJ_M));
+ 304   1        ReadDGUS(0X1320,(uint8_t *)&MJ_L,sizeof(MJ_L));
+ 305   1      // Nor_buff[0]=0xf7;      //Õ∑’Ì=÷°0xf7
+ 306   1      // Nor_buff[1]=MJ_H[1];
+ 307   1      // Nor_buff[2]=MJ_H[2];
+ 308   1      // Nor_buff[3]=MJ_H[3];
+ 309   1      // Nor_buff[4]=MJ_M[1];
+ 310   1      // Nor_buff[5]=MJ_M[2];
+ 311   1      // Nor_buff[6]=MJ_M[3];
+ 312   1      // Nor_buff[7]=MJ_L[1];
+ 313   1      // Nor_buff[8]=MJ_L[2];
+ 314   1      // Nor_buff[9]=MJ_L[3];
+ 315   1          
+ 316   1          //WriteNorFlash_Str(Nor_zhiliao_set_initial_1_Ad, (uint8_t *)&Nor_buff,6);    //–¥»Înorflash÷–Œ¥æ≠π˝À„∑®¥¶
+             -¿Ìµƒ‘¥¬Î
+ 317   1            WriteNorFlash_Dgus(Nor_zhiliao_set_initial_3_Ad, 0X1320,2); 
+ 318   1            WriteNorFlash_Dgus(Nor_zhiliao_set_initial_2_Ad, 0X1450,2); 
+ 319   1            WriteNorFlash_Dgus(Nor_zhiliao_set_initial_1_Ad, 0X1310,2);
+ 320   1       
+ 321   1          MJ_H_HEX=(u32)(MJ_H[0])<<24 | (u32)(MJ_H[1])<<16  | (u32)(MJ_H[2])<<8 | (u32)(MJ_H[3]);
+ 322   1          MJ_M_HEX=(u32)(MJ_M[0])<<24 | (u32)(MJ_M[1])<<16  | (u32)(MJ_M[2])<<8 | (u32)(MJ_M[3]);
+ 323   1          MJ_L_HEX=(u32)(MJ_L[0])<<24 | (u32)(MJ_L[1])<<16  | (u32)(MJ_L[2])<<8 | (u32)(MJ_L[3]);
+ 324   1        
+ 325   1        
+ 326   1        zhiliao_set_nor.H_mj=(MJ_H_HEX/10000)%1000;
+ 327   1        zhiliao_set_nor.H_on=(MJ_H_HEX/100)%100;
+ 328   1        zhiliao_set_nor.H_off=MJ_H_HEX%100;
+ 329   1        
+ 330   1        zhiliao_set_nor.M_mj=(MJ_M_HEX/10000)%1000;
+ 331   1        zhiliao_set_nor.M_on=(MJ_M_HEX/100)%100;
+ 332   1        zhiliao_set_nor.M_off=MJ_M_HEX%100;
+ 333   1      
+ 334   1        
+ 335   1        zhiliao_set_nor.L_mj=(MJ_L_HEX/10000)%1000;
+ 336   1        zhiliao_set_nor.L_on=(MJ_L_HEX/100)%100;
+ 337   1        zhiliao_set_nor.L_off=MJ_L_HEX%100;
+ 338   1      
+ 339   1            WriteNorFlash_Str(Nor_zhiliao_set_Ad, (uint8_t *)&zhiliao_set_nor,6); 
+ 340   1            WriteDGUS(0X3200, (uint8_t *)&zhiliao_set_nor,sizeof(zhiliao_set_nor));     //≤‚ ‘
+ 341   1      }
+ 342          
+ 343          void zhiliao_Choose_Mode_1()    //‘⁄÷Œ¡∆“≥√ÊΩ¯––
+ 344          {
+ 345   1        u8 icon_esc[2]={0};
+ 346   1        u8 receive_buff[2];
+ 347   1        u8 set_buff[4];
+ 348   1        u16 buff_zhiliao[3];
+ 349   1        ReadDGUS(0x2440,(uint8_t *)&receive_buff,sizeof(receive_buff));
+ 350   1        if(receive_buff[1]==0x01) //’‚¥Œ «ø™∆Ù
+ 351   1        {
+ 352   2          WriteDGUS(0x2450, (uint8_t *)&icon_esc,sizeof(icon_esc));
+ 353   2          WriteDGUS(0x2460, (uint8_t *)&icon_esc,sizeof(icon_esc));
+ 354   2          ReadDGUS(SET_zhiliao_moshi_Adress,(uint8_t *)&set_buff,sizeof(set_buff)); //∂¡»°…Ë÷√µƒª∫≥Âø’º‰
+ 355   2          if(set_buff[0]==0xf0)
+ 356   2          {
+ 357   3            buff_zhiliao[0]=0x00<<8|set_buff[1];
+ 358   3            buff_zhiliao[1]=0x00<<8|set_buff[2];
+ 359   3            buff_zhiliao[2]=0x00<<8|set_buff[3];
+ 360   3          WriteDGUS(0x2400, (uint8_t *)&buff_zhiliao[0],sizeof(buff_zhiliao[0]));   //∫¡Ωπ
+ 361   3          WriteDGUS(0x2410, (uint8_t *)&buff_zhiliao[1],sizeof(buff_zhiliao[1]));   //¬ˆ≥Âon
+ 362   3          WriteDGUS(0x2420, (uint8_t *)&buff_zhiliao[2],sizeof(buff_zhiliao[2]));   //¬ˆ≥Âoff
+ 363   3          }
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 7   
+
+ 364   2        }
+ 365   1        
+ 366   1      }
+ 367          
+ 368          void zhiliao_Choose_Mode_2()    //‘⁄÷Œ¡∆“≥√ÊΩ¯––
+ 369          {
+ 370   1        u8 icon_esc[2]={0};
+ 371   1        u8 receive_buff[2];
+ 372   1        u8 set_buff[4];
+ 373   1        u16 buff_zhiliao[3];
+ 374   1        ReadDGUS(0x2450,(uint8_t *)&receive_buff,sizeof(receive_buff));
+ 375   1        if(receive_buff[1]==0x01) //’‚¥Œ «ø™∆Ù
+ 376   1        {
+ 377   2          WriteDGUS(0x2440, (uint8_t *)&icon_esc,sizeof(icon_esc));
+ 378   2          WriteDGUS(0x2460, (uint8_t *)&icon_esc,sizeof(icon_esc));
+ 379   2          ReadDGUS(SET_zhiliao_moshi_Adress+0x2,(uint8_t *)&set_buff,sizeof(set_buff)); //∂¡»°…Ë÷√µƒª∫≥Âø’º‰
+ 380   2          if(set_buff[0]==0xf1)
+ 381   2          {
+ 382   3            buff_zhiliao[0]=0x00<<8|set_buff[1];
+ 383   3            buff_zhiliao[1]=0x00<<8|set_buff[2];
+ 384   3            buff_zhiliao[2]=0x00<<8|set_buff[3];
+ 385   3          WriteDGUS(0x2400, (uint8_t *)&buff_zhiliao[0],sizeof(buff_zhiliao[0]));   //∫¡Ωπ
+ 386   3          WriteDGUS(0x2410, (uint8_t *)&buff_zhiliao[1],sizeof(buff_zhiliao[1]));   //¬ˆ≥Âon
+ 387   3          WriteDGUS(0x2420, (uint8_t *)&buff_zhiliao[2],sizeof(buff_zhiliao[2]));   //¬ˆ≥Âoff
+ 388   3          }
+ 389   2        }
+ 390   1        
+ 391   1      }
+ 392          
+ 393          void zhiliao_Choose_Mode_3()    //‘⁄÷Œ¡∆“≥√ÊΩ¯––
+ 394          {
+ 395   1        u8 icon_esc[2]={0};
+ 396   1        u8 receive_buff[2];
+ 397   1        u16 buff_zhiliao[3];
+ 398   1        u8 set_buff[4];
+ 399   1        ReadDGUS(0x2460,(uint8_t *)&receive_buff,sizeof(receive_buff));
+ 400   1        if(receive_buff[1]==0x01) //’‚¥Œ «ø™∆Ù
+ 401   1        {
+ 402   2          WriteDGUS(0x2450, (uint8_t *)&icon_esc,sizeof(icon_esc));
+ 403   2          WriteDGUS(0x2440, (uint8_t *)&icon_esc,sizeof(icon_esc));
+ 404   2          ReadDGUS(SET_zhiliao_moshi_Adress+0x4,(uint8_t *)&set_buff,sizeof(set_buff)); //∂¡»°…Ë÷√µƒª∫≥Âø’º‰
+ 405   2          if(set_buff[0]==0xf2)
+ 406   2          {
+ 407   3            
+ 408   3            buff_zhiliao[0]=0x00<<8|set_buff[1];
+ 409   3            buff_zhiliao[1]=0x00<<8|set_buff[2];
+ 410   3            buff_zhiliao[2]=0x00<<8|set_buff[3];
+ 411   3          WriteDGUS(0x2400, (uint8_t *)&buff_zhiliao[0],sizeof(buff_zhiliao[0]));   //∫¡Ωπ
+ 412   3          WriteDGUS(0x2410, (uint8_t *)&buff_zhiliao[1],sizeof(buff_zhiliao[1]));   //¬ˆ≥Âon
+ 413   3          WriteDGUS(0x2420, (uint8_t *)&buff_zhiliao[2],sizeof(buff_zhiliao[2]));   //¬ˆ≥Âoff
+ 414   3          }
+ 415   2        }
+ 416   1        
+ 417   1      }
+ 418          
+ 419          void set_zhiliao_Init()
+ 420          {
+ 421   1          u16 buff_user[4];
+ 422   1        //  u8 check[6];
+ 423   1      //  u8 Nor_buff[12];
+ 424   1      //  u8 H[3];
+ 425   1      //  u8 M[3];
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 8   
+
+ 426   1      //  u8 L[3];
+ 427   1        ReadNorFlash_Dgus(Nor_zhiliao_set_Ad,0x3200,6); //∂¡»°µΩ–Èƒ‚µÿ÷∑ 0x3200
+ 428   1        
+ 429   1      //  
+ 430   1      //  ReadNorFlash_Str(Nor_zhiliao_set_initial_1_Ad,(uint8_t *)&Nor_buff,6);    //–¥»Înorflash÷–Œ¥æ≠π˝À„∑®¥¶¿Ìµ
+             -ƒ‘¥¬Î
+ 431   1      //  if(Nor_buff[0]==0xf7)
+ 432   1      //  {
+ 433   1      //    H[0]=Nor_buff[1];
+ 434   1      //    H[1]=Nor_buff[2];
+ 435   1      //    H[2]=Nor_buff[3];
+ 436   1      //    M[0]=Nor_buff[4];
+ 437   1      //    M[1]=Nor_buff[5];
+ 438   1      //    M[2]=Nor_buff[6];
+ 439   1      //    L[0]=Nor_buff[7];
+ 440   1      //    L[1]=Nor_buff[8];
+ 441   1      //    L[2]=Nor_buff[9];
+ 442   1      //    
+ 443   1      //    WriteDGUS(0x1300, (uint8_t *)&H,sizeof(H)); 
+ 444   1      //    WriteDGUS(0x1315, (uint8_t *)&M,sizeof(M)); 
+ 445   1      //    WriteDGUS(0x1320, (uint8_t *)&L,sizeof(L)); 
+ 446   1      //  }
+ 447   1                ReadNorFlash_Str(Nor_zhiliao_user_Ad,(uint8_t*)&buff_user,4);     //º”‘ÿ…œ¥Œ  ÷∂Ø¬º»Î»˝∏ˆ±‰¡ø
+ 448   1              if(buff_user[0]==0x00f6)
+ 449   1              {
+ 450   2                WriteDGUS(0x2400, (uint8_t *)&buff_user[1],sizeof(buff_user[1])); 
+ 451   2                WriteDGUS(0x2410, (uint8_t *)&buff_user[2],sizeof(buff_user[2])); 
+ 452   2                WriteDGUS(0x2420, (uint8_t *)&buff_user[3],sizeof(buff_user[3])); 
+ 453   2                //WriteDGUS(0x1700, (uint8_t *)&buff_user,sizeof(buff_user)); 
+ 454   2              }       
+ 455   1            ReadNorFlash_Dgus(Nor_zhiliao_set_initial_3_Ad, 0X1320,2);  
+ 456   1            ReadNorFlash_Dgus(Nor_zhiliao_set_initial_2_Ad, 0X1450,2);  
+ 457   1            ReadNorFlash_Dgus(Nor_zhiliao_set_initial_1_Ad, 0X1310,2);
+ 458   1              
+ 459   1        //  ReadDgus(0x1310,(uint8_t*)&check,sizeof(check));
+ 460   1          
+ 461   1        
+ 462   1      }
+ 463          
+ 464          
+ 465          /************÷Œ¡∆ƒ£ Ω“≥√Êœ¬ ”√ªß◊‘∂Øµ˜’˚ ≤ª «≤…”√»˝∏ˆøÏΩ›º¸ ∞¥œ¬ø™ º∫Û–¥»Înorflash£¨œ¬¥Œø™ª˙±£¡Ù**********
+             -/
+ 466          void zhiliao_read_norflash()    //Õ∑÷° 0xf6
+ 467          {
+ 468   1        u16 buff_read[3];
+ 469   1        u16 buff_user[4]={0x00f6,0,0,0};
+ 470   1      
+ 471   1        ReadDGUS(0x2440,(uint8_t *)&buff_read[0],sizeof(buff_read[0]));   //ºÏ≤‚»˝∏ˆ∞¥º¸
+ 472   1        ReadDGUS(0x2450,(uint8_t *)&buff_read[1],sizeof(buff_read[1]));
+ 473   1        ReadDGUS(0x2460,(uint8_t *)&buff_read[2],sizeof(buff_read[2])); 
+ 474   1        if(buff_read[0]==0  &&  buff_read[1]==0 &&  buff_read[2]==0)    //”√ªß◊‘º∫µ˜’˚√ª”–∞¥œ¬øÏΩ›º¸
+ 475   1        {
+ 476   2        
+ 477   2          ReadDGUS(0x2400, (uint8_t *)&buff_user[1],sizeof(buff_user[1]));  
+ 478   2          ReadDGUS(0x2410, (uint8_t *)&buff_user[2],sizeof(buff_user[2]));  
+ 479   2          ReadDGUS(0x2420, (uint8_t *)&buff_user[3],sizeof(buff_user[3]));  
+ 480   2          
+ 481   2          WriteNorFlash_Str(Nor_zhiliao_user_Ad, (uint8_t *)&buff_user,4);  //–¥»Înrflash
+ 482   2          
+ 483   2            //  WriteDGUS(0x3210, (uint8_t *)&buff_user,sizeof(buff_user)); 
+ 484   2        }
+ 485   1      }
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 9   
+
+ 486          
+ 487          
+ 488          
+ 489          /********************÷Œ¡∆“≥√Ê  ±º‰ÀÊ◊≈æ‡¿Îµƒ∏ƒ±‰∂¯∂ØÃ¨±‰ªØ***************
+ 490          øÿ÷∆SPµÿ÷∑ 0x1280
+ 491          **********************************************************************/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2886    ----
+   CONSTANT SIZE    =     26    ----
+   XDATA SIZE       =     80     100
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
