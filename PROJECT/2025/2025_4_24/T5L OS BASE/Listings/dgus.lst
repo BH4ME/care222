@@ -1,0 +1,201 @@
+C51 COMPILER V9.59.0.0   DGUS                                                              04/24/2025 18:24:29 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DGUS
+OBJECT MODULE PLACED IN .\Objects\dgus.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\dgus.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Source
+                    -s;.\APP;.\PAGE) DEBUG PRINT(.\Listings\dgus.lst) TABS(2) OBJECT(.\Objects\dgus.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * 文 件 名   : dgus.c
+   3          * 版 本 号   : V1.0
+   4          * 作    者   : pinot
+   5          * 生成日期   : 2019年11月03日
+   6          * 功能描述   : 读写DGUS变量存储器
+   7          * 修改历史   :
+   8          * 日    期   :
+   9          * 作    者   :
+  10          * 修改内容   :
+  11          ******************************************************************************/
+  12          
+  13          /*****************************************************************************
+  14          自定义头文件*/
+  15          #include "dgus.h"
+  16          
+  17          /*****************************************************************************
+  18          读DGUS寄存器*/
+  19          /*****************************************************************************
+  20           函 数 名  : ReadDGUS
+  21           功能描述  : 读DGUS寄存器
+  22           输入参数  : uint32_t Addr  DGUS寄存器地址
+  23                       uint8_t* pBuf  接收缓冲区
+  24                       uint16_t Len   读取数据字节长度(先高字再低字)
+  25           输出参数  : 无
+  26           修改历史  :
+  27           日    期  : 2019年11月04日
+  28           作    者  :
+  29           修改内容  : 创建
+  30          *****************************************************************************/
+  31          void ReadDGUS(uint32_t Addr, uint8_t *pBuf, uint16_t Len)
+  32          {
+  33   1        uint8_t Aoffset;
+  34   1        if(NULL == pBuf){return;}
+  35   1        if(0 == Len){return;}
+  36   1        if((Addr+Len/2) > (0xFFFF*2)){return;}
+  37   1        EA = 0;
+  38   1        Aoffset = Addr&0x01;                 /*取bit0作为奇偶判断*/
+  39   1        Addr  = Addr >> 1;                   /*配置地址*/
+  40   1        ADR_H = (uint8_t)(Addr >> 16);
+  41   1        ADR_M = (uint8_t)(Addr >> 8);
+  42   1        ADR_L = (uint8_t)(Addr);
+  43   1        RAMMODE = 0x00;
+  44   1        ADR_INC = 0x01;
+  45   1        APP_REQ = 1;                         /*占用DGUS读写*/
+  46   1        while(!APP_ACK);
+  47   1        APP_RW  = 1;                         /*读变量存储器*/
+  48   1      
+  49   1        if(1 == Aoffset)
+  50   1        {                    /*地址为奇数*/
+  51   2          if(1 == Len){ APP_DATA3=0,APP_DATA2=0,APP_DATA1=1,APP_DATA0=0;}
+  52   2          else{         APP_DATA3=0,APP_DATA2=0,APP_DATA1=1,APP_DATA0=1;}
+  53   2          APP_EN  = 1;
+  54   2          while(APP_EN);
+C51 COMPILER V9.59.0.0   DGUS                                                              04/24/2025 18:24:29 PAGE 2   
+
+  55   2          if(1 == Len){ *pBuf++=DATA1;Len=Len-1; }
+  56   2          else{         *pBuf++=DATA1;*pBuf++=DATA0;Len=Len-2;}
+  57   2        }
+  58   1        while(1)                             /*地址为偶数*/
+  59   1        {
+  60   2          if(0 == Len) break;
+  61   2          if(Len < 4)
+  62   2          {
+  63   3            switch(Len)
+  64   3            {
+  65   4              case 3: APP_DATA3=1,APP_DATA2=1,APP_DATA1=1,APP_DATA0=0;break;
+  66   4              case 2: APP_DATA3=1,APP_DATA2=1,APP_DATA1=0,APP_DATA0=0;break;
+  67   4              case 1: APP_DATA3=1,APP_DATA2=0,APP_DATA1=0,APP_DATA0=0;break;
+  68   4            }
+  69   3            APP_EN  = 1;
+  70   3            while(APP_EN);
+  71   3            switch(Len)
+  72   3            {
+  73   4              case 3: *pBuf++=DATA3;*pBuf++=DATA2;*pBuf++=DATA1;break;
+  74   4              case 2: *pBuf++=DATA3;*pBuf++=DATA2;break;
+  75   4              case 1: *pBuf++=DATA3;break;
+  76   4            }
+  77   3            break;
+  78   3            }
+  79   2          else
+  80   2          {
+  81   3            APP_DATA3=1,APP_DATA2=1,APP_DATA1=1,APP_DATA0=1;
+  82   3            APP_EN  = 1;
+  83   3            while(APP_EN);
+  84   3            *pBuf++=DATA3;*pBuf++=DATA2;*pBuf++=DATA1;*pBuf++=DATA0;
+  85   3            Len = Len - 4;
+  86   3          }
+  87   2        }
+  88   1      
+  89   1        RAMMODE = 0x00;                      /*不占用时必须清零*/
+  90   1        EA = 1;
+  91   1      }
+  92          
+  93          /*****************************************************************************
+  94          写DGUS寄存器*/
+  95          /*****************************************************************************
+  96           函 数 名  : WriteDGUS
+  97           功能描述  : 读DGUS寄存器
+  98           输入参数  : uint32_t Addr  DGUS寄存器地址
+  99                       uint8_t* pBuf  接收缓冲区
+ 100                       uint16_t Len   写入数据字节长度(先高字再低字)
+ 101           输出参数  : 无
+ 102           修改历史  :
+ 103           日    期  : 2019年11月04日
+ 104           作    者  :
+ 105           修改内容  : 创建
+ 106          *****************************************************************************/
+ 107          void WriteDGUS(uint32_t Addr, uint8_t *pBuf, uint16_t Len)
+ 108          {
+ 109   1        uint8_t Aoffset;
+ 110   1        if(NULL == pBuf){return;}
+ 111   1        if(0 == Len){return;}
+ 112   1        if((Addr+Len/2) > (0xFFFF*2)){return;}
+ 113   1        EA = 0;
+ 114   1        Aoffset = Addr&0x01;                 /*取bit0作为奇偶判断*/
+ 115   1        Addr  = Addr >> 1;                   /*配置地址*/
+ 116   1        ADR_H = (uint8_t)(Addr >> 16);
+C51 COMPILER V9.59.0.0   DGUS                                                              04/24/2025 18:24:29 PAGE 3   
+
+ 117   1        ADR_M = (uint8_t)(Addr >> 8);
+ 118   1        ADR_L = (uint8_t)(Addr);
+ 119   1        RAMMODE = 0x00;
+ 120   1        ADR_INC = 0x01;
+ 121   1        APP_REQ = 1;                         /*占用DGUS读写*/
+ 122   1        while(!APP_ACK);
+ 123   1        APP_RW  = 0;                         /*写变量存储器*/
+ 124   1      
+ 125   1        if(1 == Aoffset)
+ 126   1        {                    /*地址为奇数*/
+ 127   2          if(1 == Len){ APP_DATA3=0,APP_DATA2=0,APP_DATA1=1,APP_DATA0=0;}
+ 128   2          else{         APP_DATA3=0,APP_DATA2=0,APP_DATA1=1,APP_DATA0=1;}
+ 129   2          if(1 == Len){ DATA1=*pBuf++;Len=Len-1; }
+ 130   2          else{         DATA1=*pBuf++;DATA0=*pBuf++;Len=Len-2;}
+ 131   2          APP_EN  = 1;
+ 132   2          while(APP_EN);
+ 133   2        }
+ 134   1        while(1)                             /*地址为偶数*/
+ 135   1        {
+ 136   2          if(0 == Len) break;
+ 137   2          if(Len < 4)
+ 138   2          {
+ 139   3            switch(Len)
+ 140   3            {
+ 141   4              case 3: APP_DATA3=1,APP_DATA2=1,APP_DATA1=1,APP_DATA0=0;break;
+ 142   4              case 2: APP_DATA3=1,APP_DATA2=1,APP_DATA1=0,APP_DATA0=0;break;
+ 143   4              case 1: APP_DATA3=1,APP_DATA2=0,APP_DATA1=0,APP_DATA0=0;break;
+ 144   4            }
+ 145   3            switch(Len)
+ 146   3            {
+ 147   4              case 3: DATA3=*pBuf++;DATA2=*pBuf++;DATA1=*pBuf++;break;
+ 148   4              case 2: DATA3=*pBuf++;DATA2=*pBuf++;break;
+ 149   4              case 1: DATA3=*pBuf++;break;
+ 150   4            }
+ 151   3            APP_EN  = 1;
+ 152   3            while(APP_EN);
+ 153   3            break;
+ 154   3          }
+ 155   2          else
+ 156   2          {
+ 157   3            APP_DATA3=1,APP_DATA2=1,APP_DATA1=1,APP_DATA0=1;
+ 158   3            DATA3=*pBuf++;DATA2=*pBuf++;DATA1=*pBuf++;DATA0=*pBuf++;
+ 159   3            APP_EN  = 1;
+ 160   3            while(APP_EN);
+ 161   3            Len = Len - 4;
+ 162   3          }
+ 163   2        }
+ 164   1      
+ 165   1        RAMMODE = 0x00;                      /*不占用时必须清零*/
+ 166   1        EA = 1;
+ 167   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1173    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      14
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+C51 COMPILER V9.59.0.0   DGUS                                                              04/24/2025 18:24:29 PAGE 4   
+
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,546 @@
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE HOME
+OBJECT MODULE PLACED IN .\Objects\home.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE PAGE\home.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.
+                    -\APP;.\PAGE) DEBUG PRINT(.\Listings\home.lst) TABS(2) OBJECT(.\Objects\home.obj)
+
+line level    source
+
+   1          #include  "home.h"
+   2          #include "dgus.h"
+   3          #include "qrj.h"
+   4          #include "home.h"
+   5          
+   6          #include <math.h>
+   7          
+   8          uint8_t CurrentPageNum[2]={0};  //CurrentPageNum[1]是当前页面
+   9          
+  10          float L_M = 0.0;//距离 m
+  11          //u16 Time_static_16; //静态的时间由距离得出的
+  12          void Prepare_qrj_zx_qy(); //一直运行的 无论哪个状态适用与前三个模式
+  13          
+  14          /*********************************************************************************
+  15          中心模式：求面积和直径  面积是区域模式的四分之一，直径是区域模式的二分之一
+  16          区域模式：求面积和直径  
+  17          气溶胶模式：求体积
+  18          ********************************************************************************/
+  19          float Tanx=0.4557;
+  20          float pai=3.1415;
+  21          float Tan_zhongxin=0.04366094;
+  22          float zhongxin_35mm=0.4008159;  //=0.0175m/tan2.5
+  23          
+  24          float L_m_D_V_S=0.00;       //距离 单位:M
+  25          float Square=0.00;      //面积 单位：M^2
+  26          float D=0.00;         //直径 单位：M
+  27          float Volume=0.00;          //气溶胶体积 单位：M^3
+  28          
+  29          
+  30          u8 last_page;
+  31          //放在主函数里循环执行当前页面的程序
+  32          void ReadCurrentPage_run()    
+  33          {
+  34   1      
+  35   1        
+  36   1        ReadDGUS(0x14,(uint8_t *)&CurrentPageNum,sizeof(CurrentPageNum));
+  37   1        switch(CurrentPageNum[1])
+  38   1        {
+  39   2          case Page_home: 
+  40   2          {
+  41   3            last_page = CurrentPageNum[1];
+  42   3            current_st = 0x01;
+  43   3            break;
+  44   3          }
+  45   2          
+  46   2          case Page_qirongjiao:
+  47   2          {
+  48   3            
+  49   3            
+  50   3          //  QRJ_prepare();
+  51   3            
+  52   3            QRJ_Home();
+  53   3            Prepare_qrj_zx_qy();
+  54   3            
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 2   
+
+  55   3            break;
+  56   3          }
+  57   2            
+  58   2          case Page_zhongxin:
+  59   2          {
+  60   3            
+  61   3            Prepare_qrj_zx_qy();      
+  62   3            
+  63   3            
+  64   3            break;
+  65   3          }
+  66   2          
+  67   2          case Page_quyu:
+  68   2          {
+  69   3            
+  70   3            Prepare_qrj_zx_qy();
+  71   3            
+  72   3            break;
+  73   3          }
+  74   2          
+  75   2              
+  76   2          case Page_chengxuhua:
+  77   2          {
+  78   3      
+  79   3            break;
+  80   3          }
+  81   2          
+  82   2              
+  83   2          case Page_zhiliao:
+  84   2          {
+  85   3            break;
+  86   3          }
+  87   2          
+  88   2              
+  89   2          case Page_shoudong:
+  90   2          {   
+  91   3      
+  92   3            break;
+  93   3          }
+  94   2                
+  95   2          case Page_lianji:
+  96   2          {
+  97   3        
+  98   3            break;
+  99   3          }
+ 100   2          
+ 101   2              
+ 102   2          case Page_shezhi:
+ 103   2          {
+ 104   3      
+ 105   3            break;
+ 106   3          }
+ 107   2          
+ 108   2          case Page_chengxuhua_JUMP:
+ 109   2          {
+ 110   3            
+ 111   3            break;
+ 112   3          }
+ 113   2              
+ 114   2            case Page_zhiliao_JUMP:
+ 115   2          {
+ 116   3            break;
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 3   
+
+ 117   3          }
+ 118   2          default:
+ 119   2          {
+ 120   3            
+ 121   3            break;
+ 122   3          }
+ 123   2          
+ 124   2        }
+ 125   1        
+ 126   1      }
+ 127          
+ 128          
+ 129          
+ 130          
+ 131          
+ 132          
+ 133          //void S_D_Surfaces_All()
+ 134          //{
+ 135          
+ 136          //  L_m =  (float)(L_int/1000.000)+zhongxin_35mm;
+ 137          //  if(W_S[0]==2)//zx
+ 138          //  {
+ 139          //  D = Tan_zhongxin*2*L_m;
+ 140          //  Square  = (float)(pow(L_m*Tan_zhongxin,2)*pai); 
+ 141          //  }
+ 142          //  else 
+ 143          //  {
+ 144          //  D = Tanx*2*L_m;
+ 145          //  Square  = (float)(pow(L_m*Tanx,2)*pai); 
+ 146          //  }
+ 147          //  Volume  = Square*L_m/3.00;
+ 148          //}
+ 149          
+ 150          
+ 151          
+ 152          /**************************************************
+ 153          距离 换算 为功率大小
+ 154          形参为毫米
+ 155          *******************************************************/
+ 156          //double change_P_uW=0.0; //lg change_P_uW_doing
+ 157          double change_P_uW_doing=0.0; //根据距离在推出的功率
+ 158          //double change_P_mW_First=0.0;
+ 159          
+ 160          void L_mm_TO_P_uw(u16 L_mm_TO_P,u8 current_page)    //形式参数毫米
+ 161          {
+ 162   1        u8 L_mm_TO_P_uw_FLAG=0;
+ 163   1        double BEISHU=0.00000;
+ 164   1        double L_CM;
+ 165   1        double mihanshu=0.0;
+ 166   1        
+ 167   1        
+ 168   1        L_CM=L_mm_TO_P/10;
+ 169   1        
+ 170   1        if(L_CM<=10&& L_CM>=5) L_mm_TO_P_uw_FLAG=1;
+ 171   1          else  if(L_CM<=20&& L_CM>10) L_mm_TO_P_uw_FLAG=2;
+ 172   1            else  if(L_CM<=100&& L_CM>20) L_mm_TO_P_uw_FLAG=3;
+ 173   1            else  if(L_CM<=300&& L_CM>100) L_mm_TO_P_uw_FLAG=4;
+ 174   1              else L_mm_TO_P_uw_FLAG=5;
+ 175   1        
+ 176   1        /***66300.18x^-1.86****/
+ 177   1        switch(L_mm_TO_P_uw_FLAG)
+ 178   1        {
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 4   
+
+ 179   2          case 1:
+ 180   2          {
+ 181   3            mihanshu = pow((double)(L_CM),-1.6);
+ 182   3            BEISHU = 36527.86*mihanshu;
+ 183   3            change_P_uW_doing=BEISHU;
+ 184   3            break;
+ 185   3          }
+ 186   2          
+ 187   2          
+ 188   2              case 2:
+ 189   2          {
+ 190   3            mihanshu = pow((double)(L_CM),-1.85);
+ 191   3            BEISHU = 65617.44*mihanshu;
+ 192   3            change_P_uW_doing=BEISHU;
+ 193   3            break;
+ 194   3          }
+ 195   2          
+ 196   2              case 3:
+ 197   2          {
+ 198   3            mihanshu = pow((double)(L_CM),-1.81);
+ 199   3            BEISHU = 57622.25*mihanshu;
+ 200   3            change_P_uW_doing=BEISHU;
+ 201   3            break;
+ 202   3          }
+ 203   2          
+ 204   2              case 4:
+ 205   2          {
+ 206   3            mihanshu = pow((double)(L_CM),-2);
+ 207   3            BEISHU = 139224.07*mihanshu;
+ 208   3            change_P_uW_doing=BEISHU;
+ 209   3            break;
+ 210   3          }
+ 211   2              
+ 212   2          default:
+ 213   2          {
+ 214   3            L_mm_TO_P_uw_FLAG=0x0a;
+ 215   3          }
+ 216   2        }
+ 217   1        
+ 218   1        if(Page_qirongjiao==current_page || Page_quyu==current_page)
+ 219   1        {
+ 220   2          change_P_uW_doing=change_P_uW_doing*0.6;  //气溶胶和区域需要乘0.6
+ 221   2        }
+ 222   1        //if(W_S[0]!=2&&MODE==1)change_P_mW_doing=change_P_mW_doing*0.6;  //气溶胶和区域需要乘0.6
+ 223   1      //  change_P_mW_First=change_P_mW_doing/1000;   //uw变mw
+ 224   1      //  change_P_uW=log10(change_P_uW_doing); //用在后期画图判断的时候
+ 225   1      //  P_FINISH=change_P_mW_First;//uw变mw
+ 226   1      
+ 227   1      }
+ 228          
+ 229          
+ 230          
+ 231          
+ 232          u16 baifenbi_T=0;
+ 233          //距离、功率、体积、直径、面积
+ 234          void Prepare_qrj_zx_qy()  //一直运行的 无论哪个状态适用与前三个模式
+ 235          {
+ 236   1      
+ 237   1            L_mm_TO_P_uw(L_int,CurrentPageNum[1]);  //根据距离得到功率 
+ 238   1            WriteDGUS(0x2600,(uint8_t *)&change_P_uW_doing,sizeof(change_P_uW_doing));    /*********功率*************
+             -***/
+ 239   1            L_M = (float)(L_int/1000.00f);  //m数据/*********距离****************/
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 5   
+
+ 240   1              
+ 241   1        if(CurrentPageNum[1]==Page_qirongjiao)
+ 242   1        {
+ 243   2            L_m_D_V_S =  (float)(L_int/1000.000)+zhongxin_35mm;
+ 244   2            D = Tanx*2*L_m_D_V_S;
+ 245   2            Square  = (float)(pow(L_m_D_V_S*Tanx,2)*pai); 
+ 246   2            Volume  = Square*L_m_D_V_S/3.00;
+ 247   2            WriteDGUS(0x2850,(uint8_t *)&(Volume),sizeof(Volume));  //气溶胶为体积
+ 248   2          
+ 249   2              //  baifenbi_T = ((mJ_doing*1000.00) / qirongjiao_j ) ;
+ 250   2        }
+ 251   1        else if(CurrentPageNum[1]==Page_zhongxin)
+ 252   1        {
+ 253   2                
+ 254   2            L_m_D_V_S =  (float)(L_int/1000.000)+zhongxin_35mm;
+ 255   2            D = Tan_zhongxin*2*L_m_D_V_S;
+ 256   2            Square  = (float)(pow(L_m_D_V_S*Tan_zhongxin,2)*pai); 
+ 257   2            
+ 258   2            WriteDGUS(0x2850,(uint8_t *)&(Square),sizeof(Square));//面积  
+ 259   2          
+ 260   2            //        baifenbi_T = ((mJ_doing*1000.00) / qirongjiao_j ) ;
+ 261   2        }
+ 262   1        else if(CurrentPageNum[1]==Page_quyu)
+ 263   1        {
+ 264   2            L_m_D_V_S =  (float)(L_int/1000.000)+zhongxin_35mm;
+ 265   2            D = Tanx*2*L_m_D_V_S;
+ 266   2            Square  = (float)(pow(L_m_D_V_S*Tanx,2)*pai); 
+ 267   2            
+ 268   2            WriteDGUS(0x2850,(uint8_t *)&(Square),sizeof(Square));//面积  
+ 269   2          
+ 270   2                  //  baifenbi_T = ((mJ_doing*1000.00) / qirongjiao_j ) ;
+ 271   2        }
+ 272   1        
+ 273   1            WriteDGUS(0x2500, (uint8_t *)&L_M,sizeof(L_M)); 
+ 274   1            WriteDGUS(0x2840,(uint8_t *)&(D),sizeof(D));      //直径
+ 275   1      
+ 276   1            //WriteDGUS(0x2830,(uint8_t *)&(baifenbi_T),sizeof(baifenbi_T));    //百分比
+ 277   1      }
+ 278          
+ 279          
+ 280          
+ 281          
+ 282          float mJ_doing=0.0; //已照射的mj
+ 283          u32 time_100ms=0; //100ms的中断标志位
+ 284          u32 time_doing=0;//已经照射的时间
+ 285          //气溶胶、中心、区域 run函数
+ 286          
+ 287          void QRJ_ZX__QY_RUN(Callback_u16 callback_u16)            //放在QRJ_run
+ 288          {
+ 289   1        u16 ResTime_sec;
+ 290   1        u16 ResTime_min;  
+ 291   1        static u32 t_1=0;
+ 292   1      if(time_100ms)      //100ms老是不好用解决方式 ： 定时器里设定100ms而不是1ms
+ 293   1      {
+ 294   2          time_100ms=0;
+ 295   2          //uJ_doing+=143;
+ 296   2          //mJ_doing=mJ_doing+(change_P_uW_doing/1000); //每0.1秒累加当前的mj辐射量
+ 297   2          mJ_doing=mJ_doing+(change_P_uW_doing/1000.0f);  
+ 298   2          t_1++;
+ 299   2          if(t_1>=10) ////1s
+ 300   2          {
+ 301   3            t_1=0;
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 6   
+
+ 302   3        //    mJ_doing=mJ_doing+(change_P_uW_doing/1000);
+ 303   3          //  time_100ms=0;
+ 304   3            time_doing++; //工作时长  
+ 305   3            //TIME_static--;
+ 306   3          }
+ 307   2          callback_u16(L_int);
+ 308   2         // QRJ_mm_to_s(L_int); //根据距离和功率得到时间
+ 309   2        
+ 310   2          ResTime_min=(u16)(TIME_static)/60;
+ 311   2          ResTime_sec=(u16)(TIME_static)%60;
+ 312   2      
+ 313   2          WriteDGUS(0x2800,(uint8_t *)&ResTime_min,sizeof(ResTime_min));    /***剩余时间*分钟****/
+ 314   2          WriteDGUS(0x2805,(uint8_t *)&ResTime_sec,sizeof(ResTime_sec));    /***剩余时间*秒****/
+ 315   2          
+ 316   2          //总时间 等于剩余时间加上已经工作的时间
+ 317   2          ResTime_min=(u16)(TIME_static+time_doing)/60;
+ 318   2          ResTime_sec=(u16)(TIME_static+time_doing)%60;
+ 319   2          WriteDGUS(0x2825,(uint8_t *)&ResTime_sec,sizeof(ResTime_sec));    /***总时间*秒****/
+ 320   2          WriteDGUS(0x2820,(uint8_t *)&ResTime_min,sizeof(ResTime_min));    /***总时间*分钟****/
+ 321   2          
+ 322   2      
+ 323   2          WriteDGUS(0x2700,(uint8_t *)&mJ_doing,sizeof(mJ_doing));    /***辐射量mj***/
+ 324   2          
+ 325   2          if(mJ_doing*1000.0f > qirongjiao_j){mJ_doing=qirongjiao_j/1000.0f;} //防止照射过多
+ 326   2          baifenbi_T = ((mJ_doing*1000.00*100) / qirongjiao_j ) ;
+ 327   2          WriteDGUS(0x2830,(uint8_t *)&(baifenbi_T),sizeof(baifenbi_T));    //百分比
+ 328   2          
+ 329   2        } 
+ 330   1      }
+ 331          
+ 332          
+ 333          
+ 334          
+ 335          
+ 336          /********************************************读取当前页面并锁定*************************************/
+ 337          /****************************************
+ 338          滑动页面 00
+ 339          返回键 01
+ 340          增量调制（log值） 04
+ 341          *****************************************/
+ 342          
+ 343          void Lock_current_page_zengliang(u8 id_1,u8 daima_1);
+ 344          void Unlock_current_page_zengliang(u8 id_1,u8 daima_1);
+ 345          
+ 346          static struct{
+ 347            u16 Head ;
+ 348            u8 page_0;//固定为0x00
+ 349            u8 page_1;
+ 350            
+ 351            u8 touch_id;
+ 352            u8 touch_daima;
+ 353          
+ 354            u16 mode;
+ 355          
+ 356          }PageLock;
+ 357          
+ 358          
+ 359          void PageLock_Init()  //初始化
+ 360          {
+ 361   1        PageLock.Head=0x5aa5;
+ 362   1        PageLock.page_0=0x00;
+ 363   1      }
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 7   
+
+ 364          
+ 365          
+ 366          
+ 367            u16 Current_Lock=0;   //0表示未上锁
+ 368            u16 mode_close = 0x0000;
+ 369            u16 mode_open = 0x0001;
+ 370          
+ 371            u16 ControlPageLock_Adress = 0xb0;
+ 372          
+ 373            u8 PageSliding = 0x0b;
+ 374            u8 Returnkey = 0x05;
+ 375            //u8 zengliang=0x03;
+ 376          
+ 377          
+ 378          void Lock_current_page()
+ 379          {
+ 380   1        if(CurrentPageNum[1] == Page_qirongjiao)
+ 381   1        {
+ 382   2          Lock_current_page_zengliang(0x04,0x02); //锁住增量调制 log值
+ 383   2          //WriteDGUS(0x5105,(uint8_t *)&(icon[0]),sizeof(icon[0]));//隐藏图标
+ 384   2        }
+ 385   1      //  if(MODE==1)       
+ 386   1      //  {
+ 387   1      //        if(W_S[0]==1)//气溶胶
+ 388   1      //    {
+ 389   1      //    WriteDGUS(0x5105,(uint8_t *)&(icon_exit),sizeof(icon_exit));
+ 390   1      //    Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 391   1      //    }
+ 392   1      //    else if(W_S[0]==2)//zx
+ 393   1      //    {
+ 394   1      //    WriteDGUS(0x5106,(uint8_t *)&(icon_exit),sizeof(icon_exit));
+ 395   1      //    Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 396   1      //    }
+ 397   1      //        else if(W_S[0]==3)//qy
+ 398   1      //    {
+ 399   1      //          WriteDGUS(0x5107,(uint8_t *)&(icon_exit),sizeof(icon_exit));
+ 400   1      //    Lock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 401   1      
+ 402   1      //    }
+ 403   1      //  }
+ 404   1        
+ 405   1        //ReadDGUS(ReadCurrentPage_Adress,(uint8_t *)&Current_page,sizeof(Current_page)); //返回值 00 06
+ 406   1        PageLock.page_1=CurrentPageNum[1];
+ 407   1        PageLock.touch_id=0x00;     //滑动翻页设置为 0位置
+ 408   1        PageLock.touch_daima=PageSliding;
+ 409   1        PageLock.mode=mode_close;
+ 410   1      
+ 411   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 412   1      //  while(1)
+ 413   1      //  {
+ 414   1      //    ReadDGUS(ControlPageLock_Adress,(uint8_t *)&Current_page,sizeof(Current_page));
+ 415   1      //    if(Current_page[0]==Current_page[1])
+ 416   1      //    {break;}
+ 417   1      //  }
+ 418   1        
+ 419   1        PageLock.touch_id=0x01;   //返回键 设置为1位置
+ 420   1        PageLock.touch_daima=Returnkey;
+ 421   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 422   1      
+ 423   1        Current_Lock=1;
+ 424   1      
+ 425   1      }
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 8   
+
+ 426          
+ 427          void Unlock_current_page()
+ 428          {
+ 429   1      
+ 430   1        if(Current_Lock==1) //先判断是否上锁
+ 431   1        {
+ 432   2            if(CurrentPageNum[1] == Page_qirongjiao)
+ 433   2          {
+ 434   3          //WriteDGUS(0x5105,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 435   3            Unlock_current_page_zengliang(0x04,0x02);
+ 436   3          }
+ 437   2      //      if(MODE==1)       
+ 438   2      //  {
+ 439   2      //    if(W_S[0]==1)//气溶胶
+ 440   2      //    {
+ 441   2      //    WriteDGUS(0x5105,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 442   2      //    Unlock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 443   2      //    }
+ 444   2      //    else if(W_S[0]==2)//zx
+ 445   2      //    {
+ 446   2      //          WriteDGUS(0x5106,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 447   2      //        Unlock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 448   2      
+ 449   2      //    }
+ 450   2      //        else if(W_S[0]==3)//qy
+ 451   2      //    {
+ 452   2      //    WriteDGUS(0x5107,(uint8_t *)&(icon_attend),sizeof(icon_attend));
+ 453   2      //    Unlock_current_page_zengliang(0x04,0x02,0x05,0x02);
+ 454   2      //    }
+ 455   2      //  }
+ 456   2        
+ 457   2      
+ 458   2            PageLock.page_1=CurrentPageNum[1];  //解锁返回键
+ 459   2            PageLock.mode=mode_open;
+ 460   2            PageLock.touch_daima=Returnkey; 
+ 461   2            PageLock.touch_id=0x01; 
+ 462   2            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 463   2        
+ 464   2            PageLock.touch_daima=PageSliding;   //解锁滑动模块
+ 465   2            PageLock.touch_id=0x00;   
+ 466   2            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 467   2      
+ 468   2            Current_Lock=0;
+ 469   2      
+ 470   2        }
+ 471   1        
+ 472   1      
+ 473   1      }
+ 474          
+ 475          //锁住增量 
+ 476          void Lock_current_page_zengliang(u8 id_1,u8 daima_1)
+ 477          {
+ 478   1      
+ 479   1        PageLock.page_1=CurrentPageNum[1];
+ 480   1        PageLock.touch_id=id_1;     //调节log mj的触控增量锁住
+ 481   1        PageLock.touch_daima=daima_1;
+ 482   1        PageLock.mode=mode_close;
+ 483   1      
+ 484   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 485   1      
+ 486   1      }
+ 487          
+C51 COMPILER V9.59.0.0   HOME                                                              04/30/2025 17:32:02 PAGE 9   
+
+ 488          
+ 489          
+ 490          //解锁增量
+ 491          void Unlock_current_page_zengliang(u8 id_1,u8 daima_1)
+ 492          {
+ 493   1        
+ 494   1        PageLock.page_1=CurrentPageNum[1];
+ 495   1        PageLock.touch_id=id_1;   //返回键 设置为1位置
+ 496   1        PageLock.touch_daima=daima_1;
+ 497   1        PageLock.mode=mode_open;
+ 498   1        WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
+ 499   1        
+ 500   1      }
+ 501          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2420    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     79      21
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
