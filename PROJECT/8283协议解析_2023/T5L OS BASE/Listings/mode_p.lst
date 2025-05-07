@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 1   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MODE_P
 OBJECT MODULE PLACED IN .\Objects\mode_p.obj
-COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\mode_p.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.
-                    -\Listings\mode_p.lst) TABS(2) OBJECT(.\Objects\mode_p.obj)
+COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\mode_p.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\L
+                    -istings\mode_p.lst) TABS(2) OBJECT(.\Objects\mode_p.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52          void UART5_isr();
   53          void TIM0_suanfa_isr();
   54          void shuju_bianliang_chongzhi(void);
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 2   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 2   
 
   55          void Mode_p_work(void);
   56          
@@ -126,7 +126,7 @@ line level    source
  114   1      //  else return;
  115   1      //  P_LASTTIME=P_FINISH;
  116   1        W_LASTTIME=P_LASTTIME;
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 3   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 3   
 
  117   1        if(W_Static>=W_LASTTIME)
  118   1        {
@@ -190,7 +190,7 @@ line level    source
  176   2        
  177   2        T_doing++;
  178   2        T_WORK++;
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 4   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 4   
 
  179   2        if(T_XIANSHI>0) T_XIANSHI--;
  180   2        T_ON_OFF++;
@@ -254,7 +254,7 @@ line level    source
  238          bit yichu_T=0;
  239          void Static_T_Current_mode2()
  240          {
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 5   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 5   
 
  241   1        if(MODE==2)
  242   1        {
@@ -318,7 +318,7 @@ line level    source
  300   1      zhiliao_set_nor.Head_set_L=0XF2;
  301   1      
  302   1        ReadDGUS(0X1310,(uint8_t *)&MJ_H,sizeof(MJ_H));
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 6   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 6   
 
  303   1        ReadDGUS(0X1450,(uint8_t *)&MJ_M,sizeof(MJ_M));
  304   1        ReadDGUS(0X1320,(uint8_t *)&MJ_L,sizeof(MJ_L));
@@ -382,7 +382,7 @@ line level    source
  361   3          WriteDGUS(0x2410, (uint8_t *)&buff_zhiliao[1],sizeof(buff_zhiliao[1]));   //Âö³åon
  362   3          WriteDGUS(0x2420, (uint8_t *)&buff_zhiliao[2],sizeof(buff_zhiliao[2]));   //Âö³åoff
  363   3          }
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 7   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 7   
 
  364   2        }
  365   1        
@@ -446,7 +446,7 @@ line level    source
  423   1      //  u8 Nor_buff[12];
  424   1      //  u8 H[3];
  425   1      //  u8 M[3];
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 8   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 8   
 
  426   1      //  u8 L[3];
  427   1        ReadNorFlash_Dgus(Nor_zhiliao_set_Ad,0x3200,6); //¶ÁÈ¡µ½ÐéÄâµØÖ· 0x3200
@@ -510,7 +510,7 @@ line level    source
  483   2            //  WriteDGUS(0x3210, (uint8_t *)&buff_user,sizeof(buff_user)); 
  484   2        }
  485   1      }
-C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 16:35:26 PAGE 9   
+C51 COMPILER V9.59.0.0   MODE_P                                                            05/07/2025 23:25:23 PAGE 9   
 
  486          
  487          

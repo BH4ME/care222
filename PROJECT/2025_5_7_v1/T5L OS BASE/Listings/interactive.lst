@@ -1,0 +1,62 @@
+C51 COMPILER V9.59.0.0   INTERACTIVE                                                       05/07/2025 23:55:57 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE INTERACTIVE
+OBJECT MODULE PLACED IN .\Objects\interactive.obj
+COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE APP\interactive.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sourc
+                    -es;.\APP;.\PAGE) DEBUG PRINT(.\Listings\interactive.lst) TABS(2) OBJECT(.\Objects\interactive.obj)
+
+line level    source
+
+   1          #include "interactive.h"
+   2          
+   3          /**************************************
+   4          激光灯的交互功能、屏幕工作状态灯、RGB三色灯状态灯
+   5          
+   6          *******************************************/
+   7          
+   8          
+   9          
+  10          /*********************状态灯*****************
+  11          说明：1）在UI上显示，若没有正在进行的任务则显示空白
+  12            若开始启动程序但是UV为开，即显示绿点
+  13            若UV关则显示红点
+  14          
+  15            2）指示灯：若启动程序则显示绿灯，若UV开显示红灯 两个兼容
+  16          
+  17            3）激光：除了首页、设置界面、连接界面，其他界面开始前都开启，
+  18            若屏幕背光打开，则关闭激光
+  19          *******************************************/
+  20          
+  21          //初始化只进行一次
+  22          void Interactive_INIT()
+  23          {
+  24   1        
+  25   1        
+  26   1      }
+  27          
+  28          
+  29          //循环进行 
+  30          void Interactive_RUNNING()
+  31          {
+  32   1        
+  33   1        
+  34   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =      2    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
