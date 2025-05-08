@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 1   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE HANDLE
 OBJECT MODULE PLACED IN .\Objects\handle.obj
-COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\handle.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Source
-                    -s;.\APP;.\PAGE) DEBUG PRINT(.\Listings\handle.lst) TABS(2) OBJECT(.\Objects\handle.obj)
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\handle.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sour
+                    -ces;.\APP;.\PAGE) DEBUG PRINT(.\Listings\handle.lst) TABS(2) OBJECT(.\Objects\handle.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52          #define DLT_645_LEAST_LEN 7
   53          
   54          
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 2   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 2   
 
   55          //代码空间
   56          uint8_t code CUart2[] = "Uart2Init Done!!!123";
@@ -126,7 +126,7 @@ line level    source
  114          /*****************************************************************************
  115          判断按键值是否有上传*/
  116          int8_t GetValue0F00(void)
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 3   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 3   
 
  117          {
  118   1        uint8_t cleanData[4]={0};
@@ -190,7 +190,7 @@ line level    source
  176   3            if(getDar==0x3010)  //按下开始暂停 但不知道是哪个
  177   3            {
  178   4              //QRJ_run();
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 4   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 4   
 
  179   4                if(get_data1()==0x01) //读取数据  开始
  180   4                {
@@ -254,7 +254,7 @@ line level    source
  238   2          
  239   2              
  240   2          case Page_shoudong:
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 5   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 5   
 
  241   2          {   
  242   3      
@@ -318,7 +318,7 @@ line level    source
  300   1        
  301   1      }
  302            
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 6   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 6   
 
  303            
  304          /*****************************************************************************
@@ -382,7 +382,7 @@ line level    source
  362          /*****************************************************************************
  363          功能:检索一帧数据将值赋给结构体*/
  364          uint8_t parse_dlt645_frame(uint8_t *p_frame, uint16_t frame_len, uint8_t* sframe_body)
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 7   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 7   
 
  365          {
  366   1          uint16_t temp16_t = 0;//一帧数据的总长度
@@ -446,7 +446,7 @@ line level    source
  424   1          frame_result_t find_frame_re = UNKNOWN;
  425   1      
  426   1          //用来保存每个协议解析后的结果 
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 8   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 8   
 
  427   1          //frame_results[0] 保存PROTOCOL_DL_T_645协议解析结果
  428   1          //frame_results[1] 保存PROTOCOL_DL_T_698协议解析结果
@@ -510,7 +510,7 @@ line level    source
  486   5                              uart2_rx_count = 0;
  487   5                              break;
  488   5                          }
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:55:57 PAGE 9   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 10:05:05 PAGE 9   
 
  489   4      
  490   4                          //找到下一条0x5A开头的数据帧

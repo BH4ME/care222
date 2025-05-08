@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   CMD                                                               05/07/2025 23:25:24 PAGE 1   
+C51 COMPILER V9.59.0.0   CMD                                                               05/08/2025 12:35:25 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE CMD
 OBJECT MODULE PLACED IN .\Objects\cmd.obj
-COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\cmd.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\List
-                    -ings\cmd.lst) TABS(2) OBJECT(.\Objects\cmd.obj)
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\cmd.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\Li
+                    -stings\cmd.lst) TABS(2) OBJECT(.\Objects\cmd.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   49   2          }
   50   1       
   51   1          for ( i = 0; i < command_list.num; i++ )                                                      // ±éÀúÃü
-C51 COMPILER V9.59.0.0   CMD                                                               05/07/2025 23:25:24 PAGE 2   
+C51 COMPILER V9.59.0.0   CMD                                                               05/08/2025 12:35:25 PAGE 2   
 
              -ÁîÁÐ±í
   52   1          {

@@ -1,0 +1,206 @@
+C51 COMPILER V9.59.0.0   SZ                                                                05/08/2025 14:25:41 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SZ
+OBJECT MODULE PLACED IN .\Objects\sz.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE PAGE\sz.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.\A
+                    -PP;.\PAGE) DEBUG PRINT(.\Listings\sz.lst) TABS(2) OBJECT(.\Objects\sz.obj)
+
+line level    source
+
+   1          #include "sz.h"
+   2          #include "timer.h"
+   3          #include "adc.h"
+   4          #include "interactive.h"
+   5          #include "norflash.h"
+   6          
+   7          
+   8          
+   9          void  SZ_prepare()
+  10          {
+  11   1        if(ADC_100ms >= 2)  //200ms
+  12   1        {
+  13   2          T_100MS_ADC_isr();
+  14   2          ADC_100ms=0;
+  15   2        }
+  16   1        
+  17   1      }
+  18          
+  19          
+  20          /********************************************************************
+  21          治疗预设
+  22          皮肤面照射 创伤面照射 烧伤面照射 三个模式在norflash中各有一个地址，分开存储，以原始数据存储
+  23          整体在norflash中还有一个地址，已结构体的形式存储每一个前面有标志位，存储以u8的形式
+  24          整体在norflash中还有一个地址，以原始数据存储，四个 u16，最前面有u16的标志位
+  25          
+  26          *************************************************************************/
+  27          
+  28          
+  29          void zhiliao_date_INIT()  //从NORFLASH读取后，写入DGUS和屏幕对应的值
+  30          {
+  31   1          u16 buff_user[4];
+  32   1        //  u8 check[6];
+  33   1      //  u8 Nor_buff[12];
+  34   1      //  u8 H[3];
+  35   1      //  u8 M[3];
+  36   1      //  u8 L[3];
+  37   1        
+  38   1         /***********固定头*************/
+  39   1      zhiliao_set_nor.Head_set_H=0XF0;
+  40   1      zhiliao_set_nor.Head_set_M=0XF1;
+  41   1      zhiliao_set_nor.Head_set_L=0XF2;
+  42   1        
+  43   1        ReadNorFlash_Dgus(Nor_zhiliao_set_Ad,SET_zhiliao_moshi_Adress,6); //读取到虚拟地址 0x3200 处理后的数据
+  44   1        ReadNorFlash_Str(Nor_zhiliao_set_Ad,(uint8_t *)&zhiliao_set_nor,6); //读取到结构体 
+  45   1        
+  46   1        ReadNorFlash_Str(Nor_zhiliao_user_Ad,(uint8_t*)&buff_user,4);     //加载上次 手动录入三个变量
+  47   1        if(buff_user[0]==0x00f6)
+  48   1        {
+  49   2          WriteDGUS(0x2400, (uint8_t *)&buff_user[1],sizeof(buff_user[1])); 
+  50   2          WriteDGUS(0x2410, (uint8_t *)&buff_user[2],sizeof(buff_user[2])); 
+  51   2          WriteDGUS(0x2420, (uint8_t *)&buff_user[3],sizeof(buff_user[3])); 
+  52   2          //WriteDGUS(0x1700, (uint8_t *)&buff_user,sizeof(buff_user)); 
+  53   2        }       
+  54   1        ReadNorFlash_Dgus(Nor_zhiliao_set_initial_3_Ad, 0X1320,2);    //设置页面的地址 经过算法处理完的u8
+C51 COMPILER V9.59.0.0   SZ                                                                05/08/2025 14:25:41 PAGE 2   
+
+  55   1        ReadNorFlash_Dgus(Nor_zhiliao_set_initial_2_Ad, 0X1450,2);  
+  56   1        ReadNorFlash_Dgus(Nor_zhiliao_set_initial_1_Ad, 0X1310,2);
+  57   1        
+  58   1      }
+  59          
+  60          void zhiliao_SET()    //放在设置页面 handle中
+  61          {
+  62   1        
+  63   1        u8 MJ_H[4]; //2023 02 18  年月日
+  64   1                      //0  1  2  3
+  65   1        u8 MJ_M[4]; //00  12 45 23  时分秒
+  66   1                      //0   1  2  3
+  67   1        u8  MJ_L[4];
+  68   1       u8 MJ_H_M_L[12]={0};
+  69   1      //u8 Nor_buff[10];  //0xf7
+  70   1        u32 MJ_H_HEX,MJ_L_HEX,MJ_M_HEX;
+  71   1        
+  72   1      // /***********固定头*************/
+  73   1      //zhiliao_set_nor.Head_set_H=0XF0;
+  74   1      //zhiliao_set_nor.Head_set_M=0XF1;
+  75   1      //zhiliao_set_nor.Head_set_L=0XF2;
+  76   1      
+  77   1        ReadDGUS(0X1310,(uint8_t *)&MJ_H,sizeof(MJ_H));
+  78   1        ReadDGUS(0X1450,(uint8_t *)&MJ_M,sizeof(MJ_M));
+  79   1        ReadDGUS(0X1320,(uint8_t *)&MJ_L,sizeof(MJ_L));
+  80   1      // Nor_buff[0]=0xf7;      //头枕=帧0xf7
+  81   1      // Nor_buff[1]=MJ_H[1];
+  82   1      // Nor_buff[2]=MJ_H[2];
+  83   1      // Nor_buff[3]=MJ_H[3];
+  84   1      // Nor_buff[4]=MJ_M[1];
+  85   1      // Nor_buff[5]=MJ_M[2];
+  86   1      // Nor_buff[6]=MJ_M[3];
+  87   1      // Nor_buff[7]=MJ_L[1];
+  88   1      // Nor_buff[8]=MJ_L[2];
+  89   1      // Nor_buff[9]=MJ_L[3];
+  90   1          
+  91   1      //WriteNorFlash_Str(Nor_zhiliao_set_initial_1_Ad, (uint8_t *)&Nor_buff,6);    //写入norflash中未经过算法处理
+             -的源码
+  92   1        WriteNorFlash_Dgus(Nor_zhiliao_set_initial_3_Ad, 0X1320,2); 
+  93   1        WriteNorFlash_Dgus(Nor_zhiliao_set_initial_2_Ad, 0X1450,2); 
+  94   1        WriteNorFlash_Dgus(Nor_zhiliao_set_initial_1_Ad, 0X1310,2);
+  95   1      
+  96   1        MJ_H_HEX=(u32)(MJ_H[0])<<24 | (u32)(MJ_H[1])<<16  | (u32)(MJ_H[2])<<8 | (u32)(MJ_H[3]);
+  97   1        MJ_M_HEX=(u32)(MJ_M[0])<<24 | (u32)(MJ_M[1])<<16  | (u32)(MJ_M[2])<<8 | (u32)(MJ_M[3]);
+  98   1        MJ_L_HEX=(u32)(MJ_L[0])<<24 | (u32)(MJ_L[1])<<16  | (u32)(MJ_L[2])<<8 | (u32)(MJ_L[3]);
+  99   1        
+ 100   1        
+ 101   1        zhiliao_set_nor.H_mj=(MJ_H_HEX/10000)%1000;
+ 102   1        zhiliao_set_nor.H_on=(MJ_H_HEX/100)%100;
+ 103   1        zhiliao_set_nor.H_off=MJ_H_HEX%100;
+ 104   1        
+ 105   1        zhiliao_set_nor.M_mj=(MJ_M_HEX/10000)%1000;
+ 106   1        zhiliao_set_nor.M_on=(MJ_M_HEX/100)%100;
+ 107   1        zhiliao_set_nor.M_off=MJ_M_HEX%100;
+ 108   1      
+ 109   1        
+ 110   1        zhiliao_set_nor.L_mj=(MJ_L_HEX/10000)%1000;
+ 111   1        zhiliao_set_nor.L_on=(MJ_L_HEX/100)%100;
+ 112   1        zhiliao_set_nor.L_off=MJ_L_HEX%100;
+ 113   1      
+ 114   1        WriteNorFlash_Str(Nor_zhiliao_set_Ad, (uint8_t *)&zhiliao_set_nor,6); 
+ 115   1      //  WriteDGUS(0X3200, (uint8_t *)&zhiliao_set_nor,sizeof(zhiliao_set_nor));     //测试
+C51 COMPILER V9.59.0.0   SZ                                                                05/08/2025 14:25:41 PAGE 3   
+
+ 116   1      }
+ 117          
+ 118          
+ 119          
+ 120          
+ 121          void SZ_INIT()  //放在HOME_INIT用于开机初始化 只进行一次
+ 122          {
+ 123   1        zhiliao_date_INIT();  //从norflash读取到治疗的三个模式的数据，并且写入到设置页面
+ 124   1        
+ 125   1        
+ 126   1        
+ 127   1      }
+ 128          
+ 129          
+ 130          void SZ_Home()
+ 131          {
+ 132   1        
+ 133   1          
+ 134   1          if(last_page!=CurrentPageNum[1])  //第一次进入页面
+ 135   1        {
+ 136   2          last_page=CurrentPageNum[1];  
+ 137   2          current_st = 0x01;
+ 138   2        }
+ 139   1        
+ 140   1        
+ 141   1        switch(current_st)    //在handle.c触摸反馈中检测
+ 142   1        {
+ 143   2          case 0:   //开机初始化状态
+ 144   2          {
+ 145   3            current_st = 0x01;  //初始化成功，跳转到第一次初始化态
+ 146   3      
+ 147   3          }
+ 148   2          
+ 149   2          case 1:   //第一次初始化态
+ 150   2          {
+ 151   3            current_st = 0x02;  //第一次初始化成功，跳转到就绪态
+ 152   3          }
+ 153   2          
+ 154   2          case 2:   //就绪态
+ 155   2          {
+ 156   3            
+ 157   3            SZ_prepare(); 
+ 158   3            break;
+ 159   3          }
+ 160   2      
+ 161   2          
+ 162   2          default :
+ 163   2          {
+ 164   3            current_st = 0x02;
+ 165   3          //  SZ_prepare();
+ 166   3            break;
+ 167   3          }
+ 168   2        }
+ 169   1        
+ 170   1        
+ 171   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1108    ----
+   CONSTANT SIZE    =     12    ----
+   XDATA SIZE       =     12      44
+C51 COMPILER V9.59.0.0   SZ                                                                05/08/2025 14:25:41 PAGE 4   
+
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
