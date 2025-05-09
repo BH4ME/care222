@@ -1,0 +1,219 @@
+C51 COMPILER V9.59.0.0   INTERACTIVE                                                       05/08/2025 17:26:36 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE INTERACTIVE
+OBJECT MODULE PLACED IN .\Objects\interactive.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE APP\interactive.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sou
+                    -rces;.\APP;.\PAGE) DEBUG PRINT(.\Listings\interactive.lst) TABS(2) OBJECT(.\Objects\interactive.obj)
+
+line level    source
+
+   1          #include "interactive.h"
+   2          #include "dgus.h"
+   3          #include "norflash.h"
+   4          #include "home.h"
+   5          #include "qrj.h"
+   6          /**************************************
+   7          激光灯的交互功能、屏幕工作状态灯、RGB三色灯状态灯
+   8          
+   9          *******************************************/
+  10          
+  11          
+  12          
+  13          /*********************状态灯*****************
+  14          说明：1）在UI上显示，若没有正在进行的任务则显示空白
+  15            若开始启动程序但是UV为开，即显示绿点
+  16            若UV关则显示红点
+  17          
+  18            2）指示灯：若启动程序则显示绿灯，若UV开显示红灯 两个兼容
+  19          
+  20            3）激光：除了首页、设置界面、连接界面，其他界面开始前都开启，
+  21            若屏幕背光打开，则关闭激光
+  22          *******************************************/
+  23          
+  24          
+  25          
+  26          
+  27          #define System_Config 0x80
+  28          //关闭蜂鸣器
+  29          void Buzzer_Close_INIT()
+  30          {
+  31   1        u8 buffer_buzzer[4];
+  32   1        
+  33   1        ReadDGUS(System_Config,(uint8_t *)&buffer_buzzer,sizeof(buffer_buzzer));
+  34   1        buffer_buzzer[3] = buffer_buzzer[3] |  0x08;
+  35   1        WriteDGUS(System_Config,(uint8_t *)&buffer_buzzer,sizeof(buffer_buzzer)); 
+  36   1        
+  37   1      }
+  38          
+  39          
+  40          //开启背光待机控制
+  41          void LED_Open_INIT()
+  42          {
+  43   1        u8 buffer_buzzer[4];
+  44   1        
+  45   1        ReadDGUS(System_Config,(uint8_t *)&buffer_buzzer,sizeof(buffer_buzzer));
+  46   1        buffer_buzzer[3] = buffer_buzzer[3] |  0x04;
+  47   1        WriteDGUS(System_Config,(uint8_t *)&buffer_buzzer,sizeof(buffer_buzzer)); 
+  48   1        
+  49   1      }
+  50          
+  51          
+  52          
+  53          
+  54          #define LED_Config 0x82
+C51 COMPILER V9.59.0.0   INTERACTIVE                                                       05/08/2025 17:26:36 PAGE 2   
+
+  55          //注意若开启背光待机控制，则不需要软件控制时长大小
+  56          
+  57          void LED_NORFLASH_INIT()    //初始化
+  58          {
+  59   1        u8 Screen_Light[4];
+  60   1        u16 Screen_set_Time_min;
+  61   1        
+  62   1        ReadNorFlash_Str(Nor_set_light_Ad,(uint8_t*)&Screen_Light,2);
+  63   1        
+  64   1        //数据校验 
+  65   1        Screen_set_Time_min=Screen_Light[2]<<8|Screen_Light[3]; 
+  66   1        if(Screen_set_Time_min <= 0xffff && Screen_set_Time_min>=0x00)
+  67   1        {
+  68   2          
+  69   2        }
+  70   1        else {Screen_set_Time_min=0xffff;}  //一个单位10ms，ffff为10min
+  71   1        
+  72   1        if(Screen_Light[0] >=0x00 && Screen_Light[0]<=0x64)
+  73   1        {}
+  74   1          else {Screen_Light[0]=0x64;}      //工作亮度100%
+  75   1          
+  76   1        if(Screen_Light[1] >=0x00 && Screen_Light[1]<=0x64)
+  77   1        {}
+  78   1          else {Screen_Light[1]=0x32;}        //待机亮度50%
+  79   1          
+  80   1        WriteDGUS(0x82,(uint8_t *)&Screen_Light,sizeof(Screen_Light));  
+  81   1        WriteDGUS(0x1440,(uint8_t *)&Screen_Light,sizeof(Screen_Light));  
+  82   1      
+  83   1      }
+  84          
+  85          /***********************用户写入 屏幕亮度 待机亮度 待机时间****************/
+  86          void set_page_LED_write() //handl set界面摁下才执行
+  87          { 
+  88   1        u8 Screen_Light[4];
+  89   1        //u16 Screen_set_Time_min;
+  90   1      
+  91   1        ReadDGUS(0x1440,(uint8_t *)&Screen_Light,sizeof(Screen_Light)); 
+  92   1        WriteDGUS(0x82,(uint8_t *)&Screen_Light,sizeof(Screen_Light));
+  93   1        WriteNorFlash_Str(Nor_set_light_Ad,(uint8_t*)&Screen_Light,2);// 32位长度 
+  94   1        //Screen_set_Time_min=Screen_Light[2]<<8|Screen_Light[3];
+  95   1      }
+  96          
+  97          /***********************************************************************
+  98          状态灯
+  99          运行状态，灯亮红灯
+ 100          暂停状态，绿灯闪烁
+ 101          运行状态，但uv不亮，亮绿灯
+ 102          ***************************************************************************/
+ 103          void RGB_JIGUANG_STATELED_INIT()
+ 104          {
+ 105   1        
+ 106   1          
+ 107   1      }
+ 108          
+ 109          
+ 110          
+ 111          u16 shandong_LED_100ms=0;
+ 112            //放在主程序中，唯一问题就是一直在写入，浪费内存空间
+ 113          void RGB_JIGUANG_STATEKED_RUNNING()
+ 114          {
+ 115   1          static bit shandong_flag=0;
+ 116   1        //主页面，联机，设置不运行
+C51 COMPILER V9.59.0.0   INTERACTIVE                                                       05/08/2025 17:26:36 PAGE 3   
+
+ 117   1        if(CurrentPageNum[1]!=Page_home &&CurrentPageNum[1]!=Page_lianji  &&CurrentPageNum[1]!=Page_shezhi  )
+ 118   1        {
+ 119   2      //初始化0x00，第一次进入界面0x01，就绪态0x02（第一次进入界面只运行一次后，未执行任务），运行态0x03开始，
+ 120   2      //运行态暂停0x04，运行态结束0x05,复位0x06
+ 121   2        
+ 122   2          JIGUANG = 1;
+ 123   2          
+ 124   2          if(current_st == 0x03 && UV_St==0)  //开始运行，灯在工作
+ 125   2          {
+ 126   3            WriteDGUS(state_icon,(uint8_t *)&(icon[2]),sizeof(icon[2]));  //出现log图标 红灯照射中
+ 127   3            LED_B=1; LED_G=0;
+ 128   3            
+ 129   3          }
+ 130   2          else if( current_st== 0x03 && UV_St==1)//运行下，灯不亮
+ 131   2          {
+ 132   3            WriteDGUS(state_icon,(uint8_t *)&(icon[1]),sizeof(icon[1]));  //绿灯运行中，但未照射
+ 133   3            LED_B=0; LED_G=1;
+ 134   3          }
+ 135   2          else if(current_st== 0x04 && UV_St==1)//暂停下且灯不工作
+ 136   2          {
+ 137   3            if(shandong_LED_100ms>=5) //500ms
+ 138   3            {
+ 139   4              if(shandong_flag)
+ 140   4              {
+ 141   5                shandong_flag=~shandong_flag;
+ 142   5                WriteDGUS(state_icon,(uint8_t *)&(icon[1]),sizeof(icon[1]));  //绿灯运行中，但未照射
+ 143   5                LED_B=0; LED_G=1;       
+ 144   5              }
+ 145   4              else
+ 146   4              {
+ 147   5                shandong_flag=~shandong_flag;         
+ 148   5                WriteDGUS(state_icon,(uint8_t *)&(icon[0]),sizeof(icon[0]));  //透明
+ 149   5                LED_B=0; LED_G=0;
+ 150   5              }     
+ 151   4              shandong_LED_100ms=0;
+ 152   4            }
+ 153   3      
+ 154   3          }
+ 155   2          else //除此自外
+ 156   2          {
+ 157   3            WriteDGUS(state_icon,(uint8_t *)&(icon[0]),sizeof(icon[0]));  //透明
+ 158   3            LED_B=0; LED_G=0;
+ 159   3          }   
+ 160   2        }
+ 161   1        else
+ 162   1        {JIGUANG=0;}
+ 163   1      
+ 164   1      }
+ 165          
+ 166          
+ 167          //初始化只进行一次
+ 168          void Interactive_INIT()
+ 169          {
+ 170   1        Buzzer_Close_INIT();  //关闭蜂鸣器配置
+ 171   1        LED_Open_INIT();      //打开背光控制配置
+ 172   1        
+ 173   1        LED_NORFLASH_INIT();  //初始化背光
+ 174   1        RGB_JIGUANG_STATELED_INIT();//初始化状态灯，激光，页面状态灯
+ 175   1        
+ 176   1        
+ 177   1      }
+ 178          
+C51 COMPILER V9.59.0.0   INTERACTIVE                                                       05/08/2025 17:26:36 PAGE 4   
+
+ 179          
+ 180          //循环进行 
+ 181          void Interactive_RUNNING()
+ 182          {
+ 183   1        
+ 184   1        
+ 185   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    553    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      2      16
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
