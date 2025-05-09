@@ -1,0 +1,174 @@
+C51 COMPILER V9.59.0.0   NORFLASH                                                          05/08/2025 14:25:40 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE NORFLASH
+OBJECT MODULE PLACED IN .\Objects\norflash.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\norflash.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\So
+                    -urces;.\APP;.\PAGE) DEBUG PRINT(.\Listings\norflash.lst) TABS(2) OBJECT(.\Objects\norflash.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * 文 件 名   : norflash.c
+   3          * 版 本 号   : V1.0
+   4          * 作    者   : pinot
+   5          * 生成日期   : 2019年11月18日
+   6          * 功能描述   : 读写NorFlash
+   7          * 修改历史   :
+   8          * 日    期   :
+   9          * 作    者   :
+  10          * 修改内容   :
+  11          ******************************************************************************/
+  12          
+  13          /*****************************************************************************
+  14          自定义头文件*/
+  15          #include "norflash.h"
+  16          
+  17          
+  18          /*****************************************************************************
+  19          读NorFlash*/
+  20          /*****************************************************************************
+  21           函 数 名  : ReadNorFlash
+  22           功能描述  : 读NorFlash
+  23           输入参数  : uint32_t NorAddr    NorFlash首地址
+  24                       uint32_t DgusAddr  存储数据的DGUS地址
+  25                       uint16_t Len       读取数据字长度(必须是偶数)
+  26           输出参数  : 无
+  27           修改历史  :
+  28           日    期  : 2019年11月04日
+  29           作    者  :
+  30           修改内容  : 创建
+  31          *****************************************************************************/
+  32          void ReadNorFlash_Dgus(uint32_t NorAddr, uint32_t DgusAddr, uint16_t Len)
+  33          {
+  34   1        uint8_t temp[8]={0};
+  35   1        temp[0] = 0x5A;
+  36   1        temp[1] = (uint8_t)(NorAddr >> 16);
+  37   1        temp[2] = (uint8_t)(NorAddr >> 8);
+  38   1        temp[3] = (uint8_t)(NorAddr);
+  39   1        temp[4] = (uint8_t)(DgusAddr >> 8);
+  40   1        temp[5] = (uint8_t)(DgusAddr);
+  41   1        temp[6] = (uint8_t)(Len >> 8);
+  42   1        temp[7] = (uint8_t)(Len);
+  43   1        WriteDGUS(NOR_FLASH_RW_CMD,temp,sizeof(temp));
+  44   1        do
+  45   1        {
+  46   2          DelayMs(5);
+  47   2          ReadDGUS(NOR_FLASH_RW_CMD,temp,1);
+  48   2        }while(temp[0]!=0);
+  49   1      }
+  50          
+  51          
+  52          /*****************************************************************************
+  53          写NorFlash*/
+  54          /*****************************************************************************
+C51 COMPILER V9.59.0.0   NORFLASH                                                          05/08/2025 14:25:40 PAGE 2   
+
+  55           函 数 名  : WriteNorFlash
+  56           功能描述  : 写NorFlash
+  57           输入参数  : uint32_t NorAddr    NorFlash首地址
+  58                       uint32_t DgusAddr  存储数据的DGUS地址
+  59                       uint16_t Len       写入数据字长度(必须是偶数)
+  60           输出参数  : 无
+  61           修改历史  :
+  62           日    期  : 2019年11月04日
+  63           作    者  :
+  64           修改内容  : 创建
+  65          *****************************************************************************/
+  66          void WriteNorFlash_Dgus(uint32_t NorAddr, uint32_t DgusAddr, uint16_t Len)
+  67          {
+  68   1        uint8_t temp[8]={0};
+  69   1        temp[0] = 0xA5;
+  70   1        temp[1] = (uint8_t)(NorAddr >> 16);
+  71   1        temp[2] = (uint8_t)(NorAddr >> 8);
+  72   1        temp[3] = (uint8_t)(NorAddr);
+  73   1        temp[4] = (uint8_t)(DgusAddr >> 8);
+  74   1        temp[5] = (uint8_t)(DgusAddr);
+  75   1        temp[6] = (uint8_t)(Len >> 8);
+  76   1        temp[7] = (uint8_t)(Len);
+  77   1        WriteDGUS(NOR_FLASH_RW_CMD,temp,sizeof(temp));
+  78   1        do
+  79   1        {
+  80   2          DelayMs(5);
+  81   2          ReadDGUS(NOR_FLASH_RW_CMD,temp,1);
+  82   2        }while(temp[0]!=0);
+  83   1      }
+  84          
+  85          /*****************************************************************************
+  86           函 数 名  : WriteNorFlash
+  87           功能描述  : 写NorFlash
+  88           输入参数  : uint32_t NorAddr    NorFlash首地址
+  89                       uint32_t DgusAddr  存储数据的DGUS地址
+  90                       uint16_t Len       写入数据字长度(必须是偶数)
+  91           输出参数  : 无
+  92           修改历史  :
+  93           日    期  : 2019年11月04日
+  94           作    者  :
+  95           修改内容  : 创建
+  96          *****************************************************************************/
+  97          void WriteNorFlash_Str(uint32_t NorAddr, uint8_t* buff, uint16_t Len)
+  98          {
+  99   1        uint8_t temp[8]={0};
+ 100   1        EA=0;
+ 101   1        //sys_write_vp_nor(CACHE_ADDR,buff,Len);
+ 102   1        WriteDGUS(CACHE_ADDR,buff,Len);
+ 103   1        temp[0] = 0xA5;
+ 104   1        temp[1] = (uint8_t)(NorAddr >> 16);
+ 105   1        temp[2] = (uint8_t)(NorAddr >> 8);
+ 106   1        temp[3] = (uint8_t)(NorAddr);
+ 107   1        temp[4] = (CACHE_ADDR>>8)&0xff;/**dgusii数据地址**/
+ 108   1        temp[5] = CACHE_ADDR&0xff;
+ 109   1        temp[6] = (uint8_t)(Len >> 8);
+ 110   1        temp[7] = (uint8_t)(Len);
+ 111   1        WriteDGUS(NOR_FLASH_RW_CMD,temp,4);
+ 112   1        //  sys_write_vp_nor(NOR_FLASH_RW_CMD,temp,4);
+ 113   1        do
+ 114   1        {
+ 115   2          DelayMs(5);
+ 116   2          ReadDGUS(NOR_FLASH_RW_CMD,temp,2);
+C51 COMPILER V9.59.0.0   NORFLASH                                                          05/08/2025 14:25:40 PAGE 3   
+
+ 117   2      
+ 118   2        }while(temp[0]!=0);
+ 119   1        EA=1;
+ 120   1      }
+ 121          
+ 122          void ReadNorFlash_Str(uint32_t NorAddr, uint8_t* buff, uint16_t Len)
+ 123          {
+ 124   1        uint8_t temp[8]={0};
+ 125   1        EA=0;
+ 126   1        temp[0] = 0x5A;
+ 127   1        temp[1] = (uint8_t)(NorAddr >> 16);
+ 128   1        temp[2] = (uint8_t)(NorAddr >> 8);
+ 129   1        temp[3] = (uint8_t)(NorAddr);
+ 130   1        temp[4] = (CACHE_ADDR>>8)&0xff;//dgusii数据地址
+ 131   1        temp[5] = CACHE_ADDR&0xff;
+ 132   1        temp[6] = (uint8_t)(Len >> 8);
+ 133   1        temp[7] = (uint8_t)(Len);
+ 134   1          WriteDGUS(NOR_FLASH_RW_CMD,temp,4);
+ 135   1        do
+ 136   1        {
+ 137   2          DelayMs(5);
+ 138   2          ReadDGUS(NOR_FLASH_RW_CMD,temp,2);
+ 139   2        }while(temp[0]!=0);
+ 140   1        ReadDGUS(CACHE_ADDR,buff,Len);
+ 141   1        EA=1;
+ 142   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    722    ----
+   CONSTANT SIZE    =     32    ----
+   XDATA SIZE       =   ----      58
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

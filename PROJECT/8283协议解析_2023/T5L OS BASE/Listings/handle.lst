@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 1   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE HANDLE
 OBJECT MODULE PLACED IN .\Objects\handle.obj
-COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\handle.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.\L
-                    -istings\handle.lst) TABS(2) OBJECT(.\Objects\handle.obj)
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\handle.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.
+                    -\Listings\handle.lst) TABS(2) OBJECT(.\Objects\handle.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52          ´®¿Ú³õ´Î´òÓ¡*/
   53          
   54          /*****************************************************************************
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 2   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 2   
 
   55          Ìø×ªÖ¸¶¨Ò³Ãæ*/
   56          void JumpPage(uint16_t pageId)
@@ -126,7 +126,7 @@ line level    source
  114   3              reset[1]=buffer;
  115   3              WriteDGUS(0x2550,(uint8_t *)&reset,sizeof(reset));
  116   3              return buffer;
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 3   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 3   
 
  117   3            }
  118   2          return buffer;  
@@ -190,7 +190,7 @@ line level    source
  176   1        
  177   1          
  178   1         if (getDar==0x3010)    //ÂäÔÚÔÝÍ£¿ªÊ¼
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 4   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 4   
 
  179   1        {
  180   2          
@@ -254,7 +254,7 @@ line level    source
  238   2          
  239   2          /**************************Ä£Ê½1*****************************************/
  240   2      //  if(Page_s[1]==Page_zhongxin||Page_qirongjiao||Page_quyu)
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 5   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 5   
 
  241   2      //  {
  242   2      //    if(getDar==0x2403)
@@ -318,7 +318,7 @@ line level    source
  299   4                control_zhiliao_flag=3;
  300   4                Unlock_current_page_zengliang(0x06,0x02,0x07,0x02);
  301   4                WriteDGUS(0x2425,(uint8_t *)&(icon_attend),sizeof(icon_attend));  
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 6   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 6   
 
  302   4            }
  303   3            else if(getDar==0x3010)   //ÔÚÖÎÁÆÄ£Ê½ÏÂ°´ÏÂ¿ªÊ¼°´¼ü
@@ -382,7 +382,7 @@ line level    source
  360   3      
  361   3          /**********µØÖ·Ëã·¨
  362   3          ÔÚ0x2560ºÍ0x257dÖ®¼ä£¨²»Éæ¼°ÐÇÆÚ£©×Ü¹²ÓÐ5×éÊý¾Ý±àºÅ0~4£¬Ã¿Ò»×éÓÐ6¸öÊý¾Ý±àºÅÊÇ0~6£¨Ð¡Ê±1£¬·ÖÖÓ1£¬Ð¡Ê±2£¬·
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 7   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 7   
 
              -ÖÖÓ2£¬on£¬off£©
  363   3          1£©È¡µØÖ·-0x2560=x
@@ -446,7 +446,7 @@ line level    source
  420   4            }
  421   3      
  422   3            }
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 8   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 8   
 
  423   2      
  424   2        //    /***********************ÉèÖÃÒ³Ãæ*****************************/u16 char_hide=0xff00;
@@ -510,7 +510,7 @@ line level    source
  481   3            {
  482   4              WriteDGUS(0x1470,(uint8_t *)&(icon_exit),sizeof(icon_exit));  
  483   4              Lock_current_page_zengliang(0x06,0x02,0x07,0x02);
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 9   
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 9   
 
  484   4              WriteDGUS(0X1460,(uint8_t *)&(icon_exit),sizeof(icon_exit));  
  485   4              Lock_current_page_zengliang(0x02,0x02,0x03,0x02);
@@ -574,7 +574,7 @@ line level    source
  543   2        /************Áª»ú½çÃæ***********/
  544   2        else  if(Page_s[1]==Page_lianji)
  545   2        {
-C51 COMPILER V9.59.0.0   HANDLE                                                            05/07/2025 23:25:23 PAGE 10  
+C51 COMPILER V9.59.0.0   HANDLE                                                            05/08/2025 12:35:24 PAGE 10  
 
  546   3          
  547   3          

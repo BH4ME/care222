@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 1   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE START_WIN
 OBJECT MODULE PLACED IN .\Objects\start_win.obj
-COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\start_win.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(
-                    -.\Listings\start_win.lst) TABS(2) OBJECT(.\Objects\start_win.obj)
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\start_win.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRIN
+                    -T(.\Listings\start_win.lst) TABS(2) OBJECT(.\Objects\start_win.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52          {
   53   1        #define CHART_ADDR    0xb000  //动态曲线功能所对应的系统变量接口地址
   54   1        //#define CHART_NUM     0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 2   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 2   
 
   55   1        //#define POINT_NUM     1       //一次性写入多少个数据点
   56   1        #define colour 0Xffff
@@ -126,7 +126,7 @@ line level    source
  114          //#define tubiao_0zuobiao_x 17 //0点坐标x
  115          //#define tubiao_0zuobiao_y 430 //0点坐标y
  116          void Write_New(u16 x1,u16 y1)//每次写3字
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 3   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 3   
 
  117          {
  118   1      
@@ -190,7 +190,7 @@ line level    source
  176   1        chart_cmd[7] = (u8)(x1&0xff);
  177   1        chart_cmd[8] = (u8)(y1>>8);//y1
  178   1        chart_cmd[9] = (u8)(y1&0xff);
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 4   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 4   
 
  179   1        chart_cmd[10] = (u8)(x2>>8);//x2
  180   1        chart_cmd[11] = (u8)(x2&0xff);
@@ -254,7 +254,7 @@ line level    source
  238   1              if(change_P_mW>=0)
  239   1            {
  240   2              Y_zuobiao = tubiao_0zuobiao_y-(change_P_mW/2.5*(tubiao_0zuobiao_y-tubiao_zuoshang_y));
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 5   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 5   
 
  241   2            }
  242   1            else 
@@ -318,7 +318,7 @@ line level    source
  298          void dynamic_first_Init(u16 x1,u16 y1,u16 x2,u16 y2)
  299          {
  300   1          #define CHART_ADDR_dynamic      0xd000  //动态曲线功能所对应的系统变量接口地址
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 6   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 6   
 
  301   1        #define CHART_NUM_dynamic     0xff        //线段数数据,我们只写入chart_id指定的曲线通道,即1个
  302   1        //#define POINT_NUM     1       //一次性写入多少个数据点
@@ -382,7 +382,7 @@ line level    source
  360   1      float beishu=0;
  361   1        float cha;
  362   1      u16 adress_now;
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 7   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 7   
 
  363   1        EA=0;
  364   1        adress_now=CHART_ADDR+0x4;
@@ -446,7 +446,7 @@ line level    source
  422   3                  else 
  423   3                  {
  424   4                    j++;
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 8   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 8   
 
  425   4                      adress_now=adress_now+0x2;
  426   4                      ReadDGUS(adress_now,dynamic_y,sizeof(dynamic_y)); 
@@ -510,7 +510,7 @@ line level    source
  484   1      //    
  485   1      //    beishu=draw_num/chart_num;
  486   1      //    j=beishu;
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 9   
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 9   
 
  487   1      //              for(i=0;i<=289;i++) //2*2曲线 长度是580 一共要写入192个点每个点间距1个像素
  488   1      //      {
@@ -574,7 +574,7 @@ line level    source
  546   3                  else 
  547   3                  {
  548   4                    j++;            
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 10  
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 10  
 
  549   4                  }
  550   3                  
@@ -638,7 +638,7 @@ line level    source
  608   1        if(MODE==1)S_D_Surfaces_All();  //直径和面积
  609   1        
  610   1        if(Draw_W_Flag==1)  //开始在屏幕上画线
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 11  
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 11  
 
  611   1        {
  612   2        
@@ -702,7 +702,7 @@ line level    source
  669   3              sys_write_chart_zhexian_Two(tubiao_0zuobiao_x,tubiao_0zuobiao_y,tubiao_0zuobiao_x,tubiao_0zuobiao_y);
  670   3              sys_write_chart_zhexian_Two_Cankao(tubiao_zuoshang_x,Y_zuobiao,tubiao_zuoshang_x+tubiao_chang-2,Y_zuob
              -iao);
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 12  
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 12  
 
  671   3              
  672   3              X_zuobiao=tubiao_zuoshang_x+5;
@@ -766,7 +766,7 @@ line level    source
  729   1      
  730   1        L_m =  (float)(L_int/1000.000)+zhongxin_35mm;
  731   1        if(W_S[0]==2)//zx
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 13  
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 13  
 
  732   1        {
  733   2        D = Tan_zhongxin*2*L_m;
@@ -830,7 +830,7 @@ line level    source
  791   3      
  792   3          }
  793   2        }
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 14  
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 14  
 
  794   1        
  795   1        ReadDGUS(ReadCurrentPage_Adress,(uint8_t *)&Current_page,sizeof(Current_page)); //返回值 00 06
@@ -894,7 +894,7 @@ line level    source
  853   2            PageLock.touch_id=0x01; 
  854   2            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 
  855   2        while(1)
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 15  
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 15  
 
  856   2        {
  857   3          ReadDGUS(ControlPageLock_Adress,(uint8_t *)&page_status,sizeof(page_status));
@@ -958,7 +958,7 @@ line level    source
  915   1          PageLock.page_1=Current_page[1];
  916   1            PageLock.touch_id=id_2;   //返回键 设置为1位置
  917   1        PageLock.touch_daima=daima_2;
-C51 COMPILER V9.59.0.0   START_WIN                                                         05/07/2025 23:25:25 PAGE 16  
+C51 COMPILER V9.59.0.0   START_WIN                                                         05/08/2025 12:35:25 PAGE 16  
 
  918   1            PageLock.mode=mode_open;
  919   1            WriteDGUS(ControlPageLock_Adress, (uint8_t *)&PageLock,sizeof(PageLock)); 

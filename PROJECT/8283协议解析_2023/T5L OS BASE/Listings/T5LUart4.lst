@@ -1,10 +1,10 @@
-C51 COMPILER V9.59.0.0   T5LUART4                                                          05/07/2025 23:25:25 PAGE 1   
+C51 COMPILER V9.59.0.0   T5LUART4                                                          05/08/2025 12:35:26 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE T5LUART4
 OBJECT MODULE PLACED IN .\Objects\T5LUart4.obj
-COMPILER INVOKED BY: D:\Keil_V5_C51\C51\BIN\C51.EXE Sources\T5LUart4.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT(.
-                    -\Listings\T5LUart4.lst) TABS(2) OBJECT(.\Objects\T5LUart4.obj)
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\T5LUart4.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG PRINT
+                    -(.\Listings\T5LUart4.lst) TABS(2) OBJECT(.\Objects\T5LUart4.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
   52   1          return c;
   53   1      }
   54          
-C51 COMPILER V9.59.0.0   T5LUART4                                                          05/07/2025 23:25:25 PAGE 2   
+C51 COMPILER V9.59.0.0   T5LUART4                                                          05/08/2025 12:35:26 PAGE 2   
 
   55          
   56          
@@ -126,7 +126,7 @@ line level    source
  114   2          return;
  115   2        HmiSlvCmd.TxTimeOut=0;
  116   2        switch (HmiSlvCmd.Step){
-C51 COMPILER V9.59.0.0   T5LUART4                                                          05/07/2025 23:25:25 PAGE 3   
+C51 COMPILER V9.59.0.0   T5LUART4                                                          05/08/2025 12:35:26 PAGE 3   
 
  117   3        case 0://判断地址
  118   3          if (rData==HmiSlvCmd.Addr)
@@ -190,7 +190,7 @@ line level    source
  174   5              HmiSlvCmd.Delay=0;
  175   5              HmiSlvCmd.Status=2; //数据接收完成  通讯转发需要延迟 Status=1
  176   5            }
-C51 COMPILER V9.59.0.0   T5LUART4                                                          05/07/2025 23:25:25 PAGE 4   
+C51 COMPILER V9.59.0.0   T5LUART4                                                          05/08/2025 12:35:26 PAGE 4   
 
  177   4            HmiSlvCmd.Step=0;
  178   4          }     
@@ -254,7 +254,7 @@ line level    source
  236   2          tmp=HmiSlvBuff.Item.RegisterAddr*2;
  237   2          ReadDGUS(HmiSlvBuff.Item.RegisterAddr,(u8*)&HmiSlvSendBuff[3],HmiSlvSendBuff[2]);
  238   2          retVal=1;
-C51 COMPILER V9.59.0.0   T5LUART4                                                          05/07/2025 23:25:25 PAGE 5   
+C51 COMPILER V9.59.0.0   T5LUART4                                                          05/08/2025 12:35:26 PAGE 5   
 
  239   2          break;
  240   2        case 6: //写入
@@ -318,7 +318,7 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-C51 COMPILER V9.59.0.0   T5LUART4                                                          05/07/2025 23:25:25 PAGE 6   
+C51 COMPILER V9.59.0.0   T5LUART4                                                          05/08/2025 12:35:26 PAGE 6   
 
    CODE SIZE        =   1084    ----
    CONSTANT SIZE    =    512    ----

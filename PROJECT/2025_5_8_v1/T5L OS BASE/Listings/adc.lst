@@ -1,0 +1,93 @@
+C51 COMPILER V9.59.0.0   ADC                                                               05/08/2025 14:25:41 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE ADC
+OBJECT MODULE PLACED IN .\Objects\adc.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE APP\adc.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.\A
+                    -PP;.\PAGE) DEBUG PRINT(.\Listings\adc.lst) TABS(2) OBJECT(.\Objects\adc.obj)
+
+line level    source
+
+   1          #include "adc.h"
+   2          #include "dgus.h"
+   3          
+   4          
+   5          #define ADC_START_ADDR    0x32
+   6          
+   7          u8 adc_channel=0x01;
+   8          
+   9          
+  10          
+  11          //读取通道的ad值,不需要启动命令,屏幕上电之后,直接读取就行
+  12          //channel:0-7
+  13          u16 adc_read(u16 channel)
+  14          {
+  15   1        ReadDGUS(ADC_START_ADDR+channel,(u8*)&channel,sizeof(channel));
+  16   1        
+  17   1        return channel;
+  18   1      }
+  19          
+  20          
+  21          
+  22          u32 ADC_100ms=0;
+  23          //100ms调用一次
+  24          void T_100MS_ADC_isr()
+  25          {
+  26   1        u16 ad;
+  27   1        static float adc_08;
+  28   1        static float adc_09;
+  29   1        static float adc_10;
+  30   1        static float I; 
+  31   1        ad = adc_read(adc_channel);
+  32   1      
+  33   1        switch(adc_channel)
+  34   1        {
+  35   2          case 0x01:
+  36   2          {
+  37   3            adc_channel=0x03;
+  38   3            adc_10=ad*(3300.0f/4095)*11/1000.0f*1.02;
+  39   3            
+  40   3            WriteDGUS(ADC_10_AD,(uint8_t *)&adc_10,sizeof(adc_10));
+  41   3            break;
+  42   3          }
+  43   2          case 0x03:
+  44   2          {
+  45   3            adc_channel=0x05;
+  46   3            adc_09=ad*(3300.0f/4095)*2/1000.0f*1.01;
+  47   3                
+  48   3            WriteDGUS(ADC_09_AD,(uint8_t *)&adc_09,sizeof(adc_09));
+  49   3            break;
+  50   3          }
+  51   2          case 0x05:
+  52   2          {
+  53   3            adc_channel=0x01;
+  54   3            adc_08=ad*(3300.0f/4095)*11/1000.0f*1.02;
+C51 COMPILER V9.59.0.0   ADC                                                               05/08/2025 14:25:41 PAGE 2   
+
+  55   3            
+  56   3            I=(adc_10-adc_08)/0.5*1.02;
+  57   3            WriteDGUS(ADC_08_AD,(uint8_t *)&I,sizeof(I));
+  58   3            
+  59   3            break;
+  60   3          }
+  61   2          
+  62   2        }
+  63   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    378    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     21       4
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
