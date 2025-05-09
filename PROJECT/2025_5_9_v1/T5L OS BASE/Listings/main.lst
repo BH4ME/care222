@@ -1,0 +1,104 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              05/09/2025 19:35:33 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\main.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Source
+                    -s;.\APP;.\PAGE) DEBUG PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * 文 件 名   : main.c
+   3          * 版 本 号   : V1.0
+   4          * 作    者   : pinot
+   5          * 生成日期   : 2019年11月01日
+   6          * 功能描述   : 主函数，外设和参数初始化，主循环中主要功能函数入口。
+   7          * 修改历史   :
+   8          * 日    期   :
+   9          * 作    者   :
+  10          * 修改内容   :
+  11          ******************************************************************************/
+  12          
+  13          /*****************************************************************************
+  14          系统库*/
+  15          //short 和 int 都是2个字节 long 是4个字节
+  16          
+  17          /*****************************************************************************
+  18          自定义头文件*/
+  19          #include "T5LOS8051.H"
+  20          #include "sys.h"
+  21          #include "handle.h"
+  22          #include "i2c.h"
+  23          #include "home.h"
+  24          #include "start_win.h"
+  25          
+  26          
+  27          #define   S_LED_0_Address 0x2000  
+  28          #define   S_SPK_Address 0xA0    
+  29          
+  30          
+  31          //uint8_t code CLED_R_1[] = "R ON";
+  32          //uint8_t code CLED_R_0[] = "R OFF";
+  33          //uint8_t code CLED_G_1[] = "G ON";
+  34          //uint8_t code CLED_G_0[] = "G OFF";
+  35          //uint8_t code CLED_B_1[] = "B ON";
+  36          //uint8_t code CLED_B_0[] = "B OFF";
+  37          //uint16_t LED_Buff[4]={0x0000,0,0x00,0x00};
+  38          //uint16_t SPK_1S[4]={0x007d,0X00ff};
+  39          
+  40          
+  41          
+  42          
+  43          //Uart2SendStr(CLED_B_0,sizeof(CLED_B_0));
+  44                
+  45          /*****************************************************************************
+  46          主函数*/
+  47          //u8 aa[2];
+  48          //unsigned long  bb=55; 4个
+  49          //unsigned short  bb=55;
+  50          void main(void)
+  51          {
+  52   1        InitCPU();
+  53   1        //InitUartSend();
+  54   1        //InitUart();
+C51 COMPILER V9.59.0.0   MAIN                                                              05/09/2025 19:35:33 PAGE 2   
+
+  55   1        //JumpPage(0x14);
+  56   1        Init_Rtc();
+  57   1        UV=0;
+  58   1        PageLock_Init();
+  59   1        start_win_Init(); //画图初始化
+  60   1      //  JumpPage(0X00);
+  61   1        while(1)
+  62   1        {
+  63   2        //aa[1]=sizeof(bb);
+  64   2          //  WriteDGUS(0x5100,(uint8_t *)&(aa),sizeof(aa));
+  65   2          //WriteDGUS(TOF_Address, (uint8_t *)&L,sizeof(L));
+  66   2          //JumpPage(0x16);
+  67   2          HandleProc(); //包含串口解析
+  68   2          ReadCurrentPage_run();  //检测当前页面  
+  69   2          
+  70   2          Clock();    //时钟RTC 500ms
+  71   2        
+  72   2        
+  73   2        }
+  74   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     25    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

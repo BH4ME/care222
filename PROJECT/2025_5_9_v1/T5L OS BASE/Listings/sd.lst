@@ -1,0 +1,29 @@
+C51 COMPILER V9.59.0.0   SD                                                                05/09/2025 19:35:35 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SD
+OBJECT MODULE PLACED IN .\Objects\sd.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE PAGE\sd.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.\A
+                    -PP;.\PAGE) DEBUG PRINT(.\Listings\sd.lst) TABS(2) OBJECT(.\Objects\sd.obj)
+
+line level    source
+
+   1          #include "sd.h"
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

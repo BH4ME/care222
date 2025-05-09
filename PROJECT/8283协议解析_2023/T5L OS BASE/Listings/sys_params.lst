@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 1   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SYS_PARAMS
@@ -62,7 +62,7 @@ line level    source
   52   1          
   53   1          
   54   1        ReadNorFlash_Str(Nor_Next_Adress,(uint8_t*)&Nor_Adress,2);
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 2   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 2   
 
   55   1        Adress_Change_0=Nor_Adress[1];    /****读取上个norflash地址*****/
   56   1        DelayMs(5);
@@ -126,7 +126,7 @@ line level    source
  113   1        WriteNorFlash_Str(Nor_Next_Adress,(uint8_t*)&Nor_Adress,2);
  114   1        
  115   1      
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 3   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 3   
 
  116   1      
  117   1      EA=1; 
@@ -190,7 +190,7 @@ line level    source
  175   1      
  176   1      EA=1; 
  177   1        
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 4   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 4   
 
  178   1        
  179   1      }
@@ -254,7 +254,7 @@ line level    source
  237   1        
  238   1          
  239   1        
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 5   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 5   
 
  240   1        
  241   1        
@@ -318,7 +318,7 @@ line level    source
  299   1      }
  300          
  301          
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 6   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 6   
 
  302          /**************************开机自动启动*************************
  303          _ _ _ =最大0x0f ff 每次取4bit,例：510 开机自动进入治疗模式并且自动选择皮肤面照射 但不自动进行
@@ -382,7 +382,7 @@ line level    source
  361   3      
  362   3            case 6: {JumpPage(Page_shoudong); break;}
  363   3      
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 7   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 7   
 
  364   3            case 7: {JumpPage(Page_lianji); break;}
  365   3              
@@ -446,7 +446,7 @@ line level    source
  422          #define open_qrj_1 0xBDBAC4A3
  423          #define open_qrj_2 0xCABDffff
  424          
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 8   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 8   
 
  425          #define open_zx_0 0xD6D0D0C4
  426          #define open_zx_1 0xC4A3CABD
@@ -510,7 +510,7 @@ line level    source
  484   2          else break;
  485   2      //    else if(return_nor==1)
  486   2      //    {
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 9   
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 9   
 
  487   2      //      Adress=0x2000;
  488   2      //    }
@@ -574,7 +574,7 @@ line level    source
  541   6                    Link_Norflash.Status_1=open_cxh_1;
  542   6                    Link_Norflash.Status_2=open_cxh_2;  break;}
  543   5                      
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 10  
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 10  
 
  544   5                    default :
  545   5                    {break;}
@@ -638,7 +638,7 @@ line level    source
  601   1        
  602   1        WriteDGUS(0x1325,(uint8_t *)&read_buff,sizeof(read_buff));
  603   1        Sudoopen_set_handle();
-C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/08/2025 12:35:25 PAGE 11  
+C51 COMPILER V9.59.0.0   SYS_PARAMS                                                        05/09/2025 14:14:44 PAGE 11  
 
  604   1        
  605   1        WriteDGUS(0x1440,(uint8_t *)&Screen_Light,sizeof(Screen_Light));  
