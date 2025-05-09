@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   TIMER                                                             05/08/2025 12:35:24 PAGE 1   
+C51 COMPILER V9.59.0.0   TIMER                                                             05/09/2025 14:14:43 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIMER
@@ -62,7 +62,7 @@ line level    source
   52   1        TR0=1;              //¿ªÆô¶¨Ê±Æ÷
   53   1      }
   54          void T0_ISR_PC(void)    interrupt 1
-C51 COMPILER V9.59.0.0   TIMER                                                             05/08/2025 12:35:24 PAGE 2   
+C51 COMPILER V9.59.0.0   TIMER                                                             05/09/2025 14:14:43 PAGE 2   
 
   55          {
   56   1        EA=0;
@@ -126,7 +126,7 @@ line level    source
  114   2          else if(mode_4_flag_start&&start_mode4)
  115   2          {
  116   3            mode4_1s_time++;
-C51 COMPILER V9.59.0.0   TIMER                                                             05/08/2025 12:35:24 PAGE 3   
+C51 COMPILER V9.59.0.0   TIMER                                                             05/09/2025 14:14:43 PAGE 3   
 
  117   3            if(mode4_1s_time>=1000)
  118   3            {
@@ -190,7 +190,7 @@ line level    source
  176          {
  177   1        TF2=0;    
  178   1        EA=0;
-C51 COMPILER V9.59.0.0   TIMER                                                             05/08/2025 12:35:24 PAGE 4   
+C51 COMPILER V9.59.0.0   TIMER                                                             05/09/2025 14:14:43 PAGE 4   
 
  179   1        uv_f++;
  180   1        t2++;
@@ -254,7 +254,7 @@ line level    source
  238   2          if(UV==1)
  239   2            {
  240   3                    if(UV^UV_St==0)
-C51 COMPILER V9.59.0.0   TIMER                                                             05/08/2025 12:35:24 PAGE 5   
+C51 COMPILER V9.59.0.0   TIMER                                                             05/09/2025 14:14:43 PAGE 5   
 
  241   3              {
  242   4                UV=0;UV_FLAG=1;

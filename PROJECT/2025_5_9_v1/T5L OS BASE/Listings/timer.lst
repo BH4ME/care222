@@ -1,0 +1,125 @@
+C51 COMPILER V9.59.0.0   TIMER                                                             05/09/2025 19:35:33 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIMER
+OBJECT MODULE PLACED IN .\Objects\timer.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE Sources\timer.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sourc
+                    -es;.\APP;.\PAGE) DEBUG PRINT(.\Listings\timer.lst) TABS(2) OBJECT(.\Objects\timer.obj)
+
+line level    source
+
+   1          /******************************************************************************
+   2          * 文 件 名   : timer.c
+   3          * 版 本 号   : V1.0
+   4          * 作    者   : pinot
+   5          * 生成日期   : 2019年11月18日
+   6          * 功能描述   : 定时器应用
+   7          * 修改历史   :
+   8          * 日    期   :
+   9          * 作    者   :
+  10          * 修改内容   :
+  11          ******************************************************************************/
+  12          
+  13          /*****************************************************************************
+  14          自定义头文件*/
+  15          #include "timer.h"
+  16          #include "i2c.h"
+  17          
+  18          #include "home.h"
+  19          #include "start_win.h"
+  20          #include "adc.h"
+  21          #include "interactive.h"
+  22          /*****************************************************************************
+  23          全局变量*/
+  24          
+  25          /*****************************************************************************
+  26          定时器0*/
+  27          void T0_Init(void)
+  28          {
+  29   1        TMOD|=0x01;
+  30   1        TH0=T1MS>>8;        //1ms定时器
+  31   1        TL0=T1MS;
+  32   1        ET0=1;              //开启定时器0中断
+  33   1        TR0=1;              //开启定时器
+  34   1      }
+  35          
+  36          u32 i=0;
+  37          //u32 J=0;
+  38          void T0_ISR_PC(void)    interrupt 1
+  39          {
+  40   1        EA=0;
+  41   1        TH0=T1MS>>8;
+  42   1        TL0=T1MS;
+  43   1      //    J++;
+  44   1      //  if( J>=1500 )
+  45   1      //  {
+  46   1      //    UV=~UV;
+  47   1      //      J=0;
+  48   1      //  }
+  49   1        
+  50   1        SysTick_RTC++;    //500ms
+  51   1        i++;
+  52   1        if(i>=100)
+  53   1        {
+  54   2          X_calculate_1s++;
+C51 COMPILER V9.59.0.0   TIMER                                                             05/09/2025 19:35:33 PAGE 2   
+
+  55   2          time_100ms++;
+  56   2          ADC_100ms++;
+  57   2          shandong_LED_100ms++;
+  58   2          i=0;
+  59   2        }
+  60   1      //  time_100ms++;   //1s
+  61   1        
+  62   1       // WDT_RST();
+  63   1        EA=1;
+  64   1      }
+  65          
+  66          #if 1
+  67          /*****************************************************************************
+  68          定时器2*/
+  69          void T2_Init(void)
+  70          {
+  71   1        T2CON=0x70;
+  72   1        TH2=0x00;
+  73   1        TL2=0x00;
+  74   1        TRL2H=0xBC;
+  75   1        TRL2L=0xCD;        //1ms的定时器
+  76   1        IEN0|=0x20;        //开启定时器2
+  77   1        TR2=0x01;
+  78   1      }
+  79          void T2_ISR_PC(void)    interrupt 5
+  80          {
+  81   1        TF2=0;   
+  82   1      
+  83   1      
+  84   1      //  WDT_RST();
+  85   1      }
+  86          
+  87          #endif
+  88          /*****************************************************************************
+  89          定时器总配置*/
+  90          void InitTimer(void)
+  91          {
+  92   1        T0_Init();
+  93   1        T2_Init();
+  94   1      }
+  95          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    286    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      4    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

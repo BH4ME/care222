@@ -1,0 +1,279 @@
+C51 COMPILER V9.59.0.0   QY                                                                05/09/2025 19:35:34 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE QY
+OBJECT MODULE PLACED IN .\Objects\qy.obj
+COMPILER INVOKED BY: D:\Keil\Keil_C51\C51\BIN\C51.EXE PAGE\qy.c LARGE OMF2 OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Sources;.\A
+                    -PP;.\PAGE) DEBUG PRINT(.\Listings\qy.lst) TABS(2) OBJECT(.\Objects\qy.obj)
+
+line level    source
+
+   1          #include "qy.h"
+   2          
+   3          #include "zx.h"
+   4          #include "dgus.h"
+   5          #include "home.h"
+   6          #include "qrj.h"
+   7          
+   8          
+   9          void QY_done()  //正常照射完成
+  10          {
+  11   1        WriteDGUS(0x3010,(uint8_t *)&icon[0],sizeof(icon[0]));  //图标 变开始
+  12   1      }
+  13          
+  14          
+  15          void  QY_Reset()        //按下复位键 只进行一次 
+  16          {
+  17   1        
+  18   1        mJ_doing = 0; //总照射能量 
+  19   1        WriteDGUS(0x2700,(uint8_t *)&mJ_doing,sizeof(mJ_doing));    /***辐射量mj***/
+  20   1        
+  21   1        baifenbi_T = 0; //完成百分比为0
+  22   1        WriteDGUS(0x2830,(uint8_t *)&(baifenbi_T),sizeof(baifenbi_T));    
+  23   1        
+  24   1        time_doing=0; //已进行 的时间置为0
+  25   1        
+  26   1        WriteDGUS(0x3010,(uint8_t *)&icon[0],sizeof(icon[0]));  //图标 变开始
+  27   1         
+  28   1        
+  29   1      }
+  30          
+  31          void QY_INIT()    //开机初始化
+  32          {
+  33   1        //current_st = 0x00;
+  34   1        //WriteDGUS(0x3010,(uint8_t *)&icon[0],sizeof(icon[0]));
+  35   1      }
+  36          
+  37          
+  38          
+  39          void QY_run() //按下操作 正在照射   
+  40          {
+  41   1        //QRJ_ZX__QY_RUN();
+  42   1        QRJ_ZX__QY_RUN(ZX_mm_to_s); 
+  43   1      
+  44   1        //触发 照射完成
+  45   1        if(mJ_doing*1000 >= quyu_j  ||  TIME_static<=0  ||  baifenbi_T >=100)
+  46   1        {   
+  47   2          current_st = 0x05;  //状态位设置为 自然完成 
+  48   2        }
+  49   1        
+  50   1      }
+  51          
+  52          
+  53          //
+  54          void QY_mm_to_s(u16 L_T)  
+C51 COMPILER V9.59.0.0   QY                                                                05/09/2025 19:35:34 PAGE 2   
+
+  55          {u8 L_T_S_FLAG;
+  56   1        double L_CM;
+  57   1        L_CM=L_T/10.0;
+  58   1        if(L_CM<400 && L_CM>5) L_T_S_FLAG=1;    //在5cm~4m范围
+  59   1              else L_T_S_FLAG=5;
+  60   1      
+  61   1        if(current_st!=0x03)  //不等于运行态
+  62   1        {
+  63   2        switch(L_T_S_FLAG)
+  64   2        {
+  65   3          case 1:
+  66   3          {
+  67   4            TIME_static=quyu_j/change_P_uW_doing;
+  68   4            break;
+  69   4          }
+  70   3      
+  71   3              default:
+  72   3          {
+  73   4            L_T_S_FLAG=6;
+  74   4            
+  75   4            break;
+  76   4          }
+  77   3        }
+  78   2      }
+  79   1        
+  80   1        else  //运行态
+  81   1          
+  82   1        {
+  83   2          
+  84   2          switch(L_T_S_FLAG)
+  85   2        {
+  86   3          case 1:
+  87   3          {
+  88   4            //TIME_static=((float)(qirongjiao_j *100- uJ_doing))  / (14.3f*100) ;
+  89   4            TIME_static=((float)(quyu_j - mJ_doing*1000)) / (change_P_uW_doing) ;
+  90   4            break;
+  91   4          }
+  92   3      
+  93   3              default:
+  94   3          {
+  95   4            L_T_S_FLAG=6;
+  96   4            
+  97   4            break;
+  98   4          }
+  99   3        }
+ 100   2        
+ 101   2        }
+ 102   1      }
+ 103          
+ 104          
+ 105          
+ 106          float quyu_j=0.0;
+ 107          
+ 108          void  QY_prepare()  //在当前页面 但未操作
+ 109          {
+ 110   1        u16 ResTime_sec;
+ 111   1        u16 ResTime_min;  
+ 112   1        u16 QY_mj;  
+ 113   1      
+ 114   1      
+ 115   1        ReadDGUS(0x5101,(uint8_t *)&QY_mj,sizeof(QY_mj));   //读取杀灭log值 范围1~5
+ 116   1        switch(QY_mj)
+C51 COMPILER V9.59.0.0   QY                                                                05/09/2025 19:35:34 PAGE 3   
+
+ 117   1        {
+ 118   2          case 1:
+ 119   2          {
+ 120   3            quyu_j  = 1000;     //单位是uj 而不是mj
+ 121   3            break;
+ 122   3          }
+ 123   2              case 2:
+ 124   2          {
+ 125   3            quyu_j  = 2000;
+ 126   3            break;
+ 127   3          }
+ 128   2              case 3:
+ 129   2          {
+ 130   3            quyu_j  = 3000;
+ 131   3            break;
+ 132   3          }
+ 133   2              case 4:
+ 134   2          {
+ 135   3            quyu_j  = 5000;
+ 136   3            break;
+ 137   3          }
+ 138   2              case 5:
+ 139   2          {
+ 140   3            quyu_j  = 7000;
+ 141   3            break;
+ 142   3          }
+ 143   2        }
+ 144   1        
+ 145   1        QY_mm_to_s(L_int);  //根据距离和功率得到时间
+ 146   1        
+ 147   1        ResTime_min=(u16)(TIME_static)/60;
+ 148   1        ResTime_sec=(u16)(TIME_static)%60;
+ 149   1        WriteDGUS(0x2820,(uint8_t *)&ResTime_min,sizeof(ResTime_min));    /***总时间*分钟****/
+ 150   1        WriteDGUS(0x2800,(uint8_t *)&ResTime_min,sizeof(ResTime_min));    /***剩余时间*分钟****/
+ 151   1        WriteDGUS(0x2805,(uint8_t *)&ResTime_sec,sizeof(ResTime_sec));    /***剩余时间*秒****/
+ 152   1        WriteDGUS(0x2825,(uint8_t *)&ResTime_sec,sizeof(ResTime_sec));    /***总时间*秒****/
+ 153   1      
+ 154   1      }
+ 155          
+ 156          
+ 157          
+ 158          
+ 159          
+ 160          
+ 161          
+ 162          //主要功能解锁触控单元
+ 163          void  QY_Set()        //每次进入页面初始化
+ 164          {
+ 165   1      
+ 166   1      }
+ 167          
+ 168          
+ 169          
+ 170          void  QY_stop()       //每次进入页面初始化
+ 171          {
+ 172   1      
+ 173   1      }
+ 174          
+ 175          
+ 176          void QY_Home()  //循环运行
+ 177          {
+ 178   1        
+C51 COMPILER V9.59.0.0   QY                                                                05/09/2025 19:35:34 PAGE 4   
+
+ 179   1          if(last_page!=CurrentPageNum[1])  //第一次进入页面
+ 180   1        {
+ 181   2          last_page=CurrentPageNum[1];  
+ 182   2          current_st = 0x01;
+ 183   2        }
+ 184   1      
+ 185   1        switch(current_st)    //在handle.c触摸反馈中检测
+ 186   1        {
+ 187   2          case 0:   //开机初始化状态
+ 188   2          {
+ 189   3            current_st = 0x01;  //初始化成功，跳转到第一次初始化态
+ 190   3          //  break;
+ 191   3          }
+ 192   2          
+ 193   2          case 1:   //第一次初始化态
+ 194   2          {
+ 195   3            current_st = 0x02;  //第一次初始化成功，跳转到就绪态
+ 196   3            QY_Set();
+ 197   3            
+ 198   3          //  break;
+ 199   3          }
+ 200   2          
+ 201   2          case 2:   //就绪态
+ 202   2          {
+ 203   3            QY_prepare();
+ 204   3            break;
+ 205   3          }
+ 206   2          
+ 207   2              case 3:   //运行态开始
+ 208   2          {
+ 209   3            UV=1;
+ 210   3            QY_run();
+ 211   3            break;
+ 212   3          }
+ 213   2          
+ 214   2              case 4:   //运行态暂停
+ 215   2          {
+ 216   3            UV=0;
+ 217   3            QY_stop();
+ 218   3            break;
+ 219   3          }
+ 220   2          
+ 221   2              case 5:   //运行态结束 此为自然结束不包含复位
+ 222   2          {
+ 223   3            UV=0;
+ 224   3            QY_done();  
+ 225   3            break;
+ 226   3          }
+ 227   2              case 6:   //运行态复位 只进行一次 然后跳转到第一次初始化
+ 228   2          {
+ 229   3            UV=0;
+ 230   3            QY_Reset(); //只运行一次
+ 231   3            Unlock_current_page();//解锁
+ 232   3            current_st = 0x01;  // 置位 到第一次初始化    
+ 233   3            break;
+ 234   3          }
+ 235   2          
+ 236   2          default :
+ 237   2          {
+ 238   3            break;
+ 239   3          }
+ 240   2          
+C51 COMPILER V9.59.0.0   QY                                                                05/09/2025 19:35:34 PAGE 5   
+
+ 241   2        }
+ 242   1        
+ 243   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    810    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      4      11
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
